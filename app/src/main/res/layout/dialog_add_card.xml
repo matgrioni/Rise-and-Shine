@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="match_parent"
+    android:paddingRight="@dimen/dialog_padding_horizontal"
+    android:paddingLeft="@dimen/dialog_padding_horizontal">
+
+    <TextView
+        android:id="@+id/dialog_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/dialog_title"
+        android:textAppearance="@android:style/TextAppearance.DeviceDefault.DialogWindowTitle"
+        android:padding="@dimen/dialog_title_padding"/>
+
+    <LinearLayout
+        android:id="@+id/first_row"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/dialog_title"
+        android:orientation="horizontal">
+
+        <EditText
+            android:id="@+id/dialog_back_count"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="numberSigned"
+            android:layout_weight=".4"
+            android:hint="@string/dialog_back_count_hint"/>
+
+        <Spinner
+            android:id="@+id/dialog_card_type"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/first_row"
+            android:layout_weight=".6"
+            android:spinnerMode="dropdown"/>
+    </LinearLayout>
+</RelativeLayout>

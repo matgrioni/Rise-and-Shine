@@ -1,0 +1,51 @@
+<resources>
+
+    <!-- Base application theme. -->
+    <style name="AppTheme.Base" parent="Theme.AppCompat.Light">
+        <!-- Customize your theme here. -->
+        <item name="android:windowBackground">@color/background</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="windowActionBar">false</item>
+
+        <item name="colorAccent">@color/accent</item>
+    </style>
+
+    <style name="TextAppearance.Small" parent="TextAppearance.AppCompat.Small">
+        <item name="android:textColor">?android:attr/textColorPrimary</item>
+    </style>
+
+    <style name="TextAppearance.Medium" parent="TextAppearance.AppCompat.Medium">
+        <item name="android:textColor">?android:attr/textColorPrimary</item>
+    </style>
+
+    <style name="TextAppearance.Medium.Light" parent="TextAppearance.Medium">
+        <item name="android:textColor">@color/abc_primary_text_material_dark</item>
+    </style>
+
+    <style name="TextAppearance.Small.Light" parent="TextAppearance.AppCompat.Small">
+        <item name="android:textColor">@color/abc_primary_text_material_dark</item>
+    </style>
+
+    <style name="Toolbar.Light" parent="Theme.AppCompat.Light">
+        <item name="colorPrimary">@color/color_primary</item>
+        <item name="colorPrimaryDark">@color/color_primary_dark</item>
+
+        <item name="android:textColorPrimary">@color/abc_primary_text_material_dark</item>
+        <item name="android:textColorSecondary">@color/abc_primary_text_material_dark</item>
+    </style>
+
+    <style name="ToolbarTitle" parent="TextAppearance.Widget.AppCompat.Toolbar.Title">
+        <item name="android:textSize">20sp</item>
+    </style>
+
+    <style name="Spinner.Material.DropDownItem" parent="Widget.AppCompat.DropDownItem.Spinner">
+        <item name="android:background">@drawable/material_list_selector</item>
+    </style>
+
+    <style name="AppTheme" parent="AppTheme.Base">
+        <item name="android:spinnerStyle">@style/Widget.AppCompat.Spinner</item>
+        <item name="android:dropDownSpinnerStyle">@style/Widget.AppCompat.Spinner.DropDown</item>
+        <item name="android:spinnerDropDownItemStyle">@style/Spinner.Material.DropDownItem</item>
+    </style>
+
+</resources>

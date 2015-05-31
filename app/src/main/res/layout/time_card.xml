@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:graphview="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?android:attr/selectableItemBackground">
+
+    <RelativeLayout
+        android:id="@+id/card_body"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="@dimen/time_card_body_padding_vertical"
+        android:paddingBottom="@dimen/time_card_body_padding_vertical">
+
+        <TextView
+            android:id="@+id/interval_count"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentTop="true"
+            android:paddingLeft="@dimen/time_card_title_padding_horizontal"
+            android:textAppearance="@style/TextAppearance.Medium"/>
+
+        <com.grioni.app.screenwakecounter.GraphView
+            android:id="@+id/graph"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/graph_height"
+            android:layout_below="@+id/interval_count"
+            android:layout_marginBottom="@dimen/graph_margin_bottom"
+            graphview:textSize="@dimen/graph_text_size"
+            graphview:lineColor="@color/graph_line_color"
+            graphview:shadeColor="@color/graph_shade_color"/>
+    </RelativeLayout>
+
+    <ImageView
+        android:id="@+id/card_action"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/card_body"
+        android:layout_centerHorizontal="true"
+        android:paddingLeft="@dimen/time_card_action_padding_horizontal"
+        android:paddingRight="@dimen/time_card_action_padding_horizontal"
+        android:paddingTop="@dimen/time_card_body_padding_vertical"
+        android:contentDescription="@string/card_action_desc"
+        android:src="@drawable/card_expand"/>
+
+    <ImageView
+        android:id="@+id/card_options"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentRight="true"
+        android:paddingTop="@dimen/time_card_overflow_padding_vertical"
+        android:contentDescription="@string/card_options_desc"
+        android:src="@drawable/overflow"/>
+
+</RelativeLayout>

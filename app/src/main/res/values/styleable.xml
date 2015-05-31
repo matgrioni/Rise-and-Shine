@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="FloatingActionButton">
+        <attr name="bgcolor" format="color|reference"/>
+        <attr name="bgcolor_pressed" format="color|reference"/>
+    </declare-styleable>
+
+    <declare-styleable name="GraphView">
+        <attr name="textSize" format="dimension|reference"/>
+        <attr name="lineColor" format="color|reference"/>
+        <attr name="shadeColor" format="color|reference"/>
+    </declare-styleable>
+</resources>
