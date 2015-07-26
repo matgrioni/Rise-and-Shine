@@ -39,7 +39,7 @@ public class GraphView extends View {
     private int graphHeight;
     private int graphWidth;
 
-    private int verticalUnitToPx;
+    private double verticalUnitToPx;
     private int horizontalUnitToPx;
 
     private int lineColor;
@@ -162,7 +162,7 @@ public class GraphView extends View {
 
         for(int i = 0; i < points.size(); i++)
             path.lineTo(graphStartX + horizontalUnitToPx * i,
-                    graphStartY - points.get(i) * verticalUnitToPx);
+                    graphStartY - (int) (points.get(i) * verticalUnitToPx));
         path.lineTo(graphStartX + horizontalUnitToPx * (points.size() - 1), graphStartY);
         path.close();
 
@@ -178,12 +178,17 @@ public class GraphView extends View {
         paint.setColor(lineColor);
         paint.setStrokeWidth(2.5f);
 
-        verticalUnitToPx = (max(points) == 0) ? 0 : graphHeight / max(points);
+        // If the max is larger than the graph height, then the result of division will be zero
+        // and the graph will flatline.
+        int max = max(points);
+        verticalUnitToPx = (max == 0 || graphHeight < max) ?
+                (double) max / graphHeight : (double) graphHeight / max;
+
         if(points.size() > 1) {
             horizontalUnitToPx = graphWidth / (points.size() - 1);
 
             int priorX = graphStartX;
-            int priorY = points.get(0) * verticalUnitToPx;
+            int priorY = (int) (points.get(0) * verticalUnitToPx);
             int currentX = graphStartX - 1;
 
             for (int i = 1; i < points.size(); i++) {
@@ -191,7 +196,7 @@ public class GraphView extends View {
                 if (i % points.size() == 0)
                     currentX++;
 
-                int currentY = points.get(i) * verticalUnitToPx;
+                int currentY = (int) (points.get(i) * verticalUnitToPx);
                 canvas.drawLine(priorX, graphStartY - priorY, currentX, graphStartY - currentY, paint);
                 priorX = currentX;
                 priorY = currentY;
