@@ -12,8 +12,10 @@ import java.util.List;
 /**
  * Created by Matias Grioni on 1/6/15.
  */
-public class TimeCardsDatabase {
-    private static TimeCardsDatabase instance;
+public class TimeCardsManager {
+    private static TimeCardsManager instance;
+
+    private List<TimeCard> cards;
 
     private SQLiteDatabase database;
     private TimeCardHelper tcHelper;
@@ -25,9 +27,9 @@ public class TimeCardsDatabase {
      * @param context
      * @return
      */
-    public static TimeCardsDatabase getInstance(Context context) {
+    public static TimeCardsManager getInstance(Context context) {
         if(instance == null)
-            instance = new TimeCardsDatabase(context);
+            instance = new TimeCardsManager(context);
 
         return instance;
     }
@@ -36,7 +38,7 @@ public class TimeCardsDatabase {
      *
      * @param context
      */
-    public TimeCardsDatabase(Context context) {
+    public TimeCardsManager(Context context) {
         tcHelper = new TimeCardHelper(context);
     }
 
@@ -46,6 +48,7 @@ public class TimeCardsDatabase {
      */
     public void open() throws SQLException {
         database = tcHelper.getWritableDatabase();
+        loadCards();
     }
 
     /**
@@ -60,6 +63,8 @@ public class TimeCardsDatabase {
      * @param card
      */
     public void addCard(TimeCard card) {
+        cards.add(card);
+
         ContentValues values = new ContentValues();
         values.put(TimeCardHelper.COLUMN_TYPE, card.interval.name());
         values.put(TimeCardHelper.COLUMN_BACKCOUNT, card.backCount);
@@ -74,6 +79,8 @@ public class TimeCardsDatabase {
      * @param card
      */
     public void updateCard(int position, TimeCard card) {
+        cards.set(position, card);
+
         // Update the position-th card in the table using the passed in card.
         ContentValues values = new ContentValues();
         values.put(TimeCardHelper.COLUMN_TYPE, card.interval.name());
@@ -88,26 +95,12 @@ public class TimeCardsDatabase {
 
     /**
      *
-     * @param card
      * @return
      */
-    public boolean existsCard(TimeCard card) {
-        String[] columns = { TimeCardHelper.COLUMN_TYPE, TimeCardHelper.COLUMN_BACKCOUNT };
-        String whereClause = TimeCardHelper.COLUMN_TYPE + "=" + card.interval.name() + " AND " +
-                TimeCardHelper.COLUMN_BACKCOUNT + "=" + card.backCount;
-        Cursor cursor = database.query(TimeCardHelper.TABLE_CARDS_NAME, columns, whereClause,
-                null, null, null, null);
-
-        return cursor.getCount() != 0;
-    }
-
-    /**
-     *
-     * @return
-     */
-    public List<TimeCard> getCards() {
-        List<TimeCard> cards = new ArrayList<TimeCard>();
-        Cursor cursor = database.query(TimeCardHelper.TABLE_CARDS_NAME, columns, null, null, null, null, null);
+    public void loadCards() {
+        cards.clear();
+        Cursor cursor = database.query(TimeCardHelper.TABLE_CARDS_NAME, columns,
+                null, null, null, null, null);
 
         cursor.moveToFirst();
         while(!cursor.isAfterLast()) {
@@ -115,8 +108,10 @@ public class TimeCardsDatabase {
             cards.add(card);
             cursor.moveToNext();
         }
+    }
 
-        return cards;
+    public List<TimeCard> getCards() {
+        return this.cards;
     }
 
     /**
@@ -124,6 +119,7 @@ public class TimeCardsDatabase {
      * @param position
      */
     public void remove(int position) {
+        cards.remove(position);
         database.delete(TimeCardHelper.TABLE_CARDS_NAME, TimeCardHelper.COLUMN_ID + "=" + (position + 1), null);
     }
 
