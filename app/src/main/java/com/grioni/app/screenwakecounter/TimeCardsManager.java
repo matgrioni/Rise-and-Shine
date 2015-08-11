@@ -19,8 +19,23 @@ import java.util.List;
  * to the cards, and do not need to keep a local copy in sync.
  */
 public class TimeCardsManager {
-    private static TimeCardsManager instance;
+    /**
+     * @author - Matias Grioni
+     * @created - 8/11/15
+     *
+     * A listener for any changes to the TimeCards list. This allows for Views
+     * or Fragments, etc to implement it and to be updated when any changes
+     * happen to the TimeCards list.
+     */
+    public interface TimeCardsListener {
+        public void onCardsLoaded(List<TimeCard> cards);
+        public void onCardAdded(TimeCard card);
+        public void onCardDeleted(TimeCard card);
+        public void onCardUpdate(TimeCard card);
+    }
 
+    private static TimeCardsManager instance;
+    private static TimeCardsListener cardsListener;
     private static List<TimeCard> cards;
 
     private SQLiteDatabase database;
@@ -41,6 +56,15 @@ public class TimeCardsManager {
         }
 
         return instance;
+    }
+
+    /**
+     * Set the listener object for this class.
+     *
+     * @param listener - The listener for the TimeCardsManager.
+     */
+    public static void setTimeCardsListener(TimeCardsListener listener) {
+        cardsListener = listener;
     }
 
     /**
@@ -83,6 +107,8 @@ public class TimeCardsManager {
             cards.add(card);
             cursor.moveToNext();
         }
+
+        cardsListener.onCardsLoaded(cards);
     }
 
     /**
@@ -99,6 +125,8 @@ public class TimeCardsManager {
         values.put(TimeCardHelper.COLUMN_COLLAPSED, card.collapsed);
 
         database.insert(TimeCardHelper.TABLE_CARDS_NAME, null, values);
+
+        cardsListener.onCardAdded(card);
     }
 
     /**
@@ -107,9 +135,11 @@ public class TimeCardsManager {
      * @param position - The position of the TimeCard to remove.
      */
     public void remove(int position) {
-        cards.remove(position);
+        TimeCard card = cards.remove(position);
         database.delete(TimeCardHelper.TABLE_CARDS_NAME,
                 TimeCardHelper.COLUMN_ID + "=" + (position + 1), null);
+
+        cardsListener.onCardDeleted(card);
     }
 
     /**
@@ -147,12 +177,32 @@ public class TimeCardsManager {
         // information.
         database.update(TimeCardHelper.TABLE_CARDS_NAME, values,
                 TimeCardHelper.COLUMN_ID + "=" + (position + 1), null);
+
+        cardsListener.onCardUpdate(card);
     }
 
+    /**
+     * Increments the card counters on this
+     */
+    public void incrementCards() {
+        for(int i = 0; i < cards.size(); i++) {
+            TimeCard card = cards.get(i);
 
+            // Increment the total count for the card and also increment the last point of the card.
+            card.count++;
+
+            List<Integer> points = card.points;
+            int lastPoint = points.get(points.size() - 1);
+            points.set(points.size() - 1, ++lastPoint);
+            card.points = points;
+
+            this.updateCard(i, card);
+        }
+    }
 
     /**
      * The list of TimeCards.
+     *
      * @return - The list of TimeCards.
      */
     public List<TimeCard> getCards() {
