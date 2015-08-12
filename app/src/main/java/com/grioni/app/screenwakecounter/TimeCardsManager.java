@@ -30,8 +30,9 @@ public class TimeCardsManager {
     public interface TimeCardsListener {
         public void onCardsLoaded(List<TimeCard> cards);
         public void onCardAdded(TimeCard card);
-        public void onCardDeleted(TimeCard card);
-        public void onCardUpdate(TimeCard card);
+        public void onCardDeleted(int position);
+        public void onCardUpdate(int position, TimeCard card);
+        public void onCardsUpdate(List<TimeCard> cards);
     }
 
     private static TimeCardsManager instance;
@@ -93,6 +94,8 @@ public class TimeCardsManager {
 
     /**
      * Loads the list of TimeCards in the database to the member variable list.
+     * Calls the corresponding TimeCardsListener callback if the listener is
+     * set.
      */
     public void loadCards() {
         // Clear the list of cards then query the database for all cards
@@ -108,11 +111,13 @@ public class TimeCardsManager {
             cursor.moveToNext();
         }
 
-        cardsListener.onCardsLoaded(cards);
+        if (cardsListener != null)
+            cardsListener.onCardsLoaded(cards);
     }
 
     /**
-     * Adds a card to the list of cards and saves it to the database.
+     * Adds a card to the list of cards and saves it to the database. Calls the
+     * corresponding TimeCardsListener callback if the listener is set.
      *
      * @param card - The TimeCard to save.
      */
@@ -126,25 +131,30 @@ public class TimeCardsManager {
 
         database.insert(TimeCardHelper.TABLE_CARDS_NAME, null, values);
 
-        cardsListener.onCardAdded(card);
+        if (cardsListener != null)
+            cardsListener.onCardAdded(card);
     }
 
     /**
      * Removes the card at the given position from the list and the database.
+     * Calls the corresponding TimeCardsListener callback if the listener is
+     * set.
      *
      * @param position - The position of the TimeCard to remove.
      */
     public void remove(int position) {
-        TimeCard card = cards.remove(position);
+        cards.remove(position);
         database.delete(TimeCardHelper.TABLE_CARDS_NAME,
                 TimeCardHelper.COLUMN_ID + "=" + (position + 1), null);
 
-        cardsListener.onCardDeleted(card);
+        if (cardsListener != null)
+            cardsListener.onCardDeleted(position);
     }
 
     /**
-     * Change the card collapsed state of the card at the provided position and save it in the
-     * database.
+     * Change the card collapsed state of the card at the provided position and
+     * save it in the database. Calls onCardUpdate if the TimeCardsListener is
+     * set for the manager.
      *
      * @param position - The position of the card to update in the card list. position + 1 is the id
      *                 in the database.
@@ -157,11 +167,11 @@ public class TimeCardsManager {
     }
 
     /**
-     * Update the TimeCard in the list at the provided position and in the database corresponding to the
-     * position.
+     * Update the TimeCard in the list at the provided position and in the database corresponding to
+     * the position. Calls onCardUpdate if the TimeCardsListener is set for the manager.
      *
-     * @param position - The position of the TimeCard to replace in the TimeCard list and (position + 1) is
-     *                 the id of the row for the TimeCard in the database.
+     * @param position - The position of the TimeCard to replace in the TimeCard list and
+     *                 (position + 1) is the id of the row for the TimeCard in the database.
      * @param card - The TimeCard to replace the old TimeCard with.
      */
     public void updateCard(int position, TimeCard card) {
@@ -178,7 +188,21 @@ public class TimeCardsManager {
         database.update(TimeCardHelper.TABLE_CARDS_NAME, values,
                 TimeCardHelper.COLUMN_ID + "=" + (position + 1), null);
 
-        cardsListener.onCardUpdate(card);
+        if (cardsListener != null)
+            cardsListener.onCardUpdate(position, card);
+    }
+
+    /**
+     * Update the cards for the manager to the passed in list. Calls onCardsUpdate of the
+     * TimeCardsListener if it is set.
+     *
+     * @param cards - Sets the cards of the TimeCardsManager. Aliasing does not occur.
+     */
+    public void updateCards(List<TimeCard> cards) {
+        this.cards = new ArrayList<TimeCard>(cards);
+
+        if (cardsListener != null)
+            cardsListener.onCardsUpdate(this.cards);
     }
 
     /**
