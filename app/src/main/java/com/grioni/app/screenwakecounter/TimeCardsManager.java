@@ -69,6 +69,14 @@ public class TimeCardsManager {
     }
 
     /**
+     * Sets the TimeCardsListener object to null so that the previous listener callbacks are no
+     * longer called.
+     */
+    public static void removeTimeCardsListener() {
+        cardsListener = null;
+    }
+
+    /**
      * Constructor.
      * @param context - An application context to create the TimeCardsManager object.
      */
