@@ -31,8 +31,8 @@ public class TimeCardsManager {
         public void onCardsLoaded(List<TimeCard> cards);
         public void onCardAdded(TimeCard card);
         public void onCardDeleted(int position);
-        public void onCardUpdate(int position, TimeCard card);
-        public void onCardsUpdate(List<TimeCard> cards);
+        public void onCardUpdated(int position, TimeCard card);
+        public void onCardsUpdated(List<TimeCard> cards);
     }
 
     private static TimeCardsManager instance;
@@ -197,7 +197,7 @@ public class TimeCardsManager {
                 TimeCardHelper.COLUMN_ID + "=" + (position + 1), null);
 
         if (cardsListener != null)
-            cardsListener.onCardUpdate(position, card);
+            cardsListener.onCardUpdated(position, card);
     }
 
     /**
@@ -210,7 +210,7 @@ public class TimeCardsManager {
         this.cards = new ArrayList<TimeCard>(cards);
 
         if (cardsListener != null)
-            cardsListener.onCardsUpdate(this.cards);
+            cardsListener.onCardsUpdated(this.cards);
     }
 
     /**
