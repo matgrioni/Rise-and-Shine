@@ -23,11 +23,20 @@ public class ScreenCountDatabase {
     private TimeCounterHelper tcHelper;
     private String[] columns = { TimeCounterHelper.COLUMN_ID, TimeCounterHelper.COLUMN_COUNT };
 
+    // The row size / length of the respective databases. The hour table is an
+    // irregularity because once the first day passes the hour rows are reused
+    // so the size is usually 24. So hourSize is really the current hour of the
+    // day we are currently on.
     private static int hourSize = 0;
     private static int daySize = 0;
     private static int weekSize = 0;
     private static int monthSize = 0;
 
+    /**
+     *
+     * @param context
+     * @return
+     */
     public static ScreenCountDatabase getInstance(Context context) {
         if(instance == null)
             instance = new ScreenCountDatabase(context);

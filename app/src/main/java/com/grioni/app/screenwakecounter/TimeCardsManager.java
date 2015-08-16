@@ -16,27 +16,11 @@ import java.util.List;
  * A wrapper around a list and database object to manage TimeCards for this application. Addition,
  * updating, and removal of cards affects the list and the underlying database so that both are in
  * sync. Uses the singleton pattern so that all Activities, Fragments, and classes can have access
- * to the cards, and do not need to keep a local copy in sync.
+ * to the cards, and do not need to keep a local copy in sync. The M in the MVC framework for the
+ * TimeCards.
  */
 public class TimeCardsManager {
-    /**
-     * @author - Matias Grioni
-     * @created - 8/11/15
-     *
-     * A listener for any changes to the TimeCards list. This allows for Views
-     * or Fragments, etc to implement it and to be updated when any changes
-     * happen to the TimeCards list.
-     */
-    public interface TimeCardsListener {
-        public void onCardsLoaded(List<TimeCard> cards);
-        public void onCardAdded(TimeCard card);
-        public void onCardDeleted(int position);
-        public void onCardUpdated(int position, TimeCard card);
-        public void onCardsUpdated(List<TimeCard> cards);
-    }
-
     private static TimeCardsManager instance;
-    private static TimeCardsListener cardsListener;
     private static List<TimeCard> cards;
 
     private SQLiteDatabase database;
@@ -45,35 +29,22 @@ public class TimeCardsManager {
             TimeCardHelper.COLUMN_BACKCOUNT, TimeCardHelper.COLUMN_COLLAPSED };
 
     /**
-     * Creates a TimeCardsManager instance if none exist or returns the currently existing one.
+     * Creates a TimeCardsManager instance if none exist or returns the
+     * currently existing one. Do not use the TimeCardsManager constructor to
+     * get a TimeCardsManager object.
      *
      * @param context - An application context to create the instance.
      * @return - The current instance or a new one if none has been created yet.
      */
     public static TimeCardsManager getInstance(Context context) {
+        // If no instance has been created yet make one and create a new set of
+        // cards for it too.
         if(instance == null) {
             instance = new TimeCardsManager(context);
             cards = new ArrayList<TimeCard>();
         }
 
         return instance;
-    }
-
-    /**
-     * Set the listener object for this class.
-     *
-     * @param listener - The listener for the TimeCardsManager.
-     */
-    public static void setTimeCardsListener(TimeCardsListener listener) {
-        cardsListener = listener;
-    }
-
-    /**
-     * Sets the TimeCardsListener object to null so that the previous listener callbacks are no
-     * longer called.
-     */
-    public static void removeTimeCardsListener() {
-        cardsListener = null;
     }
 
     /**
@@ -102,8 +73,6 @@ public class TimeCardsManager {
 
     /**
      * Loads the list of TimeCards in the database to the member variable list.
-     * Calls the corresponding TimeCardsListener callback if the listener is
-     * set.
      */
     public void loadCards() {
         // Clear the list of cards then query the database for all cards
@@ -118,14 +87,10 @@ public class TimeCardsManager {
             cards.add(card);
             cursor.moveToNext();
         }
-
-        if (cardsListener != null)
-            cardsListener.onCardsLoaded(cards);
     }
 
     /**
-     * Adds a card to the list of cards and saves it to the database. Calls the
-     * corresponding TimeCardsListener callback if the listener is set.
+     * Adds a card to the list of cards and saves it to the database.
      *
      * @param card - The TimeCard to save.
      */
@@ -138,15 +103,10 @@ public class TimeCardsManager {
         values.put(TimeCardHelper.COLUMN_COLLAPSED, card.collapsed);
 
         database.insert(TimeCardHelper.TABLE_CARDS_NAME, null, values);
-
-        if (cardsListener != null)
-            cardsListener.onCardAdded(card);
     }
 
     /**
      * Removes the card at the given position from the list and the database.
-     * Calls the corresponding TimeCardsListener callback if the listener is
-     * set.
      *
      * @param position - The position of the TimeCard to remove.
      */
@@ -154,15 +114,13 @@ public class TimeCardsManager {
         cards.remove(position);
         database.delete(TimeCardHelper.TABLE_CARDS_NAME,
                 TimeCardHelper.COLUMN_ID + "=" + (position + 1), null);
-
-        if (cardsListener != null)
-            cardsListener.onCardDeleted(position);
     }
 
     /**
      * Change the card collapsed state of the card at the provided position and
-     * save it in the database. Calls onCardUpdate if the TimeCardsListener is
-     * set for the manager.
+     * save it in the database. More of a convenience method rather than getting
+     * the card at the position changing its collapsible field then setting it
+     * back.
      *
      * @param position - The position of the card to update in the card list. position + 1 is the id
      *                 in the database.
@@ -176,7 +134,7 @@ public class TimeCardsManager {
 
     /**
      * Update the TimeCard in the list at the provided position and in the database corresponding to
-     * the position. Calls onCardUpdate if the TimeCardsListener is set for the manager.
+     * the position.
      *
      * @param position - The position of the TimeCard to replace in the TimeCard list and
      *                 (position + 1) is the id of the row for the TimeCard in the database.
@@ -195,22 +153,43 @@ public class TimeCardsManager {
         // information.
         database.update(TimeCardHelper.TABLE_CARDS_NAME, values,
                 TimeCardHelper.COLUMN_ID + "=" + (position + 1), null);
-
-        if (cardsListener != null)
-            cardsListener.onCardUpdated(position, card);
     }
 
     /**
-     * Update the cards for the manager to the passed in list. Calls onCardsUpdate of the
-     * TimeCardsListener if it is set.
+     * Update the cards for the manager to the passed in list.
      *
      * @param cards - Sets the cards of the TimeCardsManager. Aliasing does not occur.
      */
     public void updateCards(List<TimeCard> cards) {
         this.cards = new ArrayList<TimeCard>(cards);
+    }
 
-        if (cardsListener != null)
-            cardsListener.onCardsUpdated(this.cards);
+    /**
+     * Queries the ScreenCountDatabase for the total counts and points for the
+     * TimeCard at the given position.
+     *
+     * @param position - The position of the TimeCard in the list.
+     * @return - The TimeCard with the modified cache.
+     */
+    public TimeCard query(int position) {
+        TimeCard card = cards.get(position);
+
+        int count = TimeCardUtils.getCount(card);
+        List<Integer> points = TimeCardUtils.getPoints(card);
+        card.cache.count = count;
+        card.cache.points = points;
+
+        cards.set(position, card);
+
+        return card;
+    }
+
+    /**
+     * Convenience method for querying all the TimeCards in the list.
+     */
+    public void queryAll() {
+        for(int i = 0; i < cards.size(); i++)
+            this.query(i);
     }
 
     /**
@@ -221,12 +200,12 @@ public class TimeCardsManager {
             TimeCard card = cards.get(i);
 
             // Increment the total count for the card and also increment the last point of the card.
-            card.count++;
+            card.cache.count++;
 
-            List<Integer> points = card.points;
+            List<Integer> points = card.cache.points;
             int lastPoint = points.get(points.size() - 1);
             points.set(points.size() - 1, ++lastPoint);
-            card.points = points;
+            card.cache.points = points;
 
             this.updateCard(i, card);
         }

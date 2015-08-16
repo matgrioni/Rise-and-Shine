@@ -24,7 +24,7 @@ public class TimeCardHolder extends RecyclerView.ViewHolder {
 
         @Override
         public void onAnimationEnd(Animation animation) {
-            cardStateListener.onCardChangeState(getPosition());
+            cardEventListener.onCardStateChanged(getPosition());
         }
 
         @Override
@@ -52,9 +52,8 @@ public class TimeCardHolder extends RecyclerView.ViewHolder {
         }
     };
 
-    private TimeCardsFragment.TimeCardExpandListener cardExpandListener;
-    private TimeCardsFragment.TimeCardDeleteListener cardDeleteListener;
-    private TimeCardsFragment.TimeCardStateListener cardStateListener;
+    private TimeCardEventListener cardEventListener;
+    private TimeCardsManager cardsManager;
 
     public TextView count;
     public GraphView graph;
@@ -83,6 +82,8 @@ public class TimeCardHolder extends RecyclerView.ViewHolder {
         popupMenu.inflate(R.menu.card_options);
 
         baseContext = parent.getContext();
+
+        cardsManager = TimeCardsManager.getInstance(baseContext);
     }
 
     /**
@@ -92,7 +93,7 @@ public class TimeCardHolder extends RecyclerView.ViewHolder {
         itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                cardExpandListener.expandTimeCard(card, getPosition());
+                cardEventListener.onCardClicked(getPosition());
             }
         });
 
@@ -113,12 +114,8 @@ public class TimeCardHolder extends RecyclerView.ViewHolder {
             @Override
             public boolean onMenuItemClick(MenuItem item) {
                 switch(item.getItemId()) {
-                    case R.id.card_delete:
-                        cardDeleteListener.onCardDelete(getPosition());
-                        return true;
-
                     case R.id.card_share:
-                        String shareText = "Screen was turned on " + card.count + " times in the last ";
+                        String shareText = "Screen was turned on " + card.cache.count + " times in the last ";
                         if(card.backCount == 1)
                             shareText += card.interval.name().toLowerCase();
                         else
@@ -148,7 +145,7 @@ public class TimeCardHolder extends RecyclerView.ViewHolder {
             label += Integer.toString(card.backCount) + " " + card.interval.name() + "s";
         else
             label += card.interval.name();
-        count.setText(label + ": " + card.count);
+        count.setText(label + ": " + card.cache.count);
 
         String axis = "Hour";
         if (card.backCount == 1) {
@@ -157,7 +154,7 @@ public class TimeCardHolder extends RecyclerView.ViewHolder {
         } else
             axis = card.interval.name();
         graph.setAxis(axis);
-        graph.setData(card.points);
+        graph.setData(card.cache.points);
 
         if(!card.collapsed) {
             ViewGroup.MarginLayoutParams params =
@@ -171,25 +168,9 @@ public class TimeCardHolder extends RecyclerView.ViewHolder {
 
     /**
      *
-     * @param cardExpandListener
+     * @param cardEventListener
      */
-    public void setCardExpandListener(TimeCardsFragment.TimeCardExpandListener cardExpandListener) {
-        this.cardExpandListener = cardExpandListener;
-    }
-
-    /**
-     *
-     * @param cardDeleteListener
-     */
-    public void setCardDeleteListener(TimeCardsFragment.TimeCardDeleteListener cardDeleteListener) {
-        this.cardDeleteListener = cardDeleteListener;
-    }
-
-    /**
-     *
-     * @param cardStateListener
-     */
-    public void setCardStateListener(TimeCardsFragment.TimeCardStateListener cardStateListener) {
-        this.cardStateListener = cardStateListener;
+    public void setCardEventListener(TimeCardEventListener cardEventListener) {
+        this.cardEventListener = cardEventListener;
     }
 }

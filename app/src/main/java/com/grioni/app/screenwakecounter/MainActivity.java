@@ -23,45 +23,33 @@ import android.view.animation.AnimationUtils;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.List;
+
 /**
  * Created by Matias Grioni on 12/16/14.
  */
 public class MainActivity extends ActionBarActivity implements
-        AddCardDialogFragment.AddCardDialogListener,
-        TimeCardsFragment.TimeCardDeleteListener,
-        TimeCardsFragment.TimeCardExpandListener,
-        TimeCardsFragment.TimeCardStateListener,
-        SharedPreferences.OnSharedPreferenceChangeListener{
+        SharedPreferences.OnSharedPreferenceChangeListener {
 
     private ScreenWakeListener onScreenWake = new ScreenWakeListener() {
         @Override
         public void onScreenWake() {
             updateInfo(ScreenCountService.getHourCount());
-            timeCards.incrementCards();
-
-            if(graphDetails != null) {
-                TimeCard card = timeCards.getCard(graphDetails.getPosition());
-                graphDetails.update(card);
-            }
+            timeCardsManager.incrementCards();
+            timeCards.update();
         }
     };
 
     private WriteListener onWrite = new WriteListener() {
         @Override
         public void onWrite() {
-            updateInfo(0);
-            timeCards.updateCards();
-
             // Update the notification only here, because when the screen is woken, the
             // ScreenCountService automatically updates the notification, but when the database
             // is written to every hour it does not update since the notification is part of the
             // foreground service. This will update the foreground service notification.
             countService.updateNotif();
-
-            if(graphDetails != null) {
-                TimeCard card = timeCards.getCard(graphDetails.getPosition());
-                graphDetails.update(card);
-            }
+            updateInfo(0);
+            timeCards.reload();
         }
     };
 
@@ -106,24 +94,13 @@ public class MainActivity extends ActionBarActivity implements
         }
     };
 
-    private View.OnClickListener onAddCard = new View.OnClickListener() {
-        @Override
-        public void onClick(View view) {
-            AddCardDialogFragment addCardDialog = new AddCardDialogFragment();
-            FragmentManager manager = getFragmentManager();
-            addCardDialog.show(manager, "add_card");
-        }
-    };
+    private TimeCardsManager timeCardsManager;
+    private ScreenCountDatabase countDatabase;
 
     private TextView hourCount;
     private TextView countdown;
 
-    private GraphDetailFragment graphDetails;
     private TimeCardsFragment timeCards;
-    private FloatingActionButton fab;
-
-    private Animation fabIn;
-    private Animation fabOut;
 
     private SettingsFragment settings;
 
@@ -140,12 +117,18 @@ public class MainActivity extends ActionBarActivity implements
         Intent writeIntent = new Intent(MainActivity.this, ScreenCountWriteService.class);
         bindService(writeIntent, writeConnection, Context.BIND_AUTO_CREATE);
 
+        // Create the TimeCardsManger singleton instance and load the cards.
+        timeCardsManager = TimeCardsManager.getInstance(this);
+        timeCardsManager.open();
+
+        countDatabase = ScreenCountDatabase.getInstance(this);
+        countDatabase.open();
+
+        TimeCardUtils.init(this);
+
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         if(toolbar != null)
             setSupportActionBar(toolbar);
-        else {
-            Toast.makeText(this, "MAtias", Toast.LENGTH_SHORT).show();
-        }
 
         hourCount = (TextView) findViewById(R.id.hour_count);
         countdown = (TextView) findViewById(R.id.countdown);
@@ -162,47 +145,26 @@ public class MainActivity extends ActionBarActivity implements
             transaction.commit();
         }
 
-        Fragment g = getFragmentManager().findFragmentByTag("graphDetails");
-        if(g != null) {
-            graphDetails = (GraphDetailFragment) g;
-
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        }
-
         Fragment s = getFragmentManager().findFragmentByTag("settings");
         if(s != null) {
             settings = (SettingsFragment) s;
-
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
-
-        fab = (FloatingActionButton) findViewById(R.id.fab_add_time_card);
-        fab.setOnClickListener(onAddCard);
-
-        fabIn = AnimationUtils.loadAnimation(this, android.R.anim.slide_in_left);
-        fabOut = AnimationUtils.loadAnimation(this, android.R.anim.slide_out_right);
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case android.R.id.home:
-                fab.startAnimation(fabIn);
-                fab.setVisibility(View.VISIBLE);
-
                 getFragmentManager().popBackStack();
                 getSupportActionBar().setDisplayHomeAsUpEnabled(false);
                 getSupportActionBar().setTitle(R.string.app_name);
 
-                graphDetails = null;
                 settings = null;
 
                 break;
 
             case R.id.settings:
-                fab.startAnimation(fabOut);
-                fab.setVisibility(View.GONE);
-
                 settings = new SettingsFragment();
 
                 FragmentTransaction transaction = getFragmentManager().beginTransaction();
@@ -220,26 +182,26 @@ public class MainActivity extends ActionBarActivity implements
 
     @Override
     public void onBackPressed() {
-        if(graphDetails != null || settings != null) {
-            fab.startAnimation(fabIn);
-            fab.setVisibility(View.VISIBLE);
-
+        if(settings != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(false);
             getSupportActionBar().setTitle(R.string.app_name);
 
-            graphDetails = null;
             settings = null;
             getFragmentManager().popBackStack();
+        } else if(timeCards.getChildFragmentManager().getBackStackEntryCount() > 0) {
+            timeCards.getChildFragmentManager().popBackStack();
+            getSupportActionBar().setTitle("Rise and Shine");
+            getSupportActionBar().setDisplayHomeAsUpEnabled(false);
         } else {
             super.onBackPressed();
         }
-
-
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
+
+        timeCardsManager.close();
 
         if(countBound) {
             unbindService(countConnection);
@@ -290,59 +252,6 @@ public class MainActivity extends ActionBarActivity implements
             timer.start();
     }
 
-    /**
-     *
-     * @param position
-     */
-    public void expandTimeCard(TimeCard card, int position) {
-        fab.startAnimation(fabOut);
-        fab.setVisibility(View.GONE);
-
-        graphDetails = GraphDetailFragment.newInstance(card, position);
-
-        FragmentTransaction transaction = getFragmentManager().beginTransaction();
-        transaction.replace(R.id.time_cards_container, graphDetails, "graphDetails");
-        transaction.addToBackStack(null);
-        transaction.commit();
-
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-    }
-
-    /**
-     *
-     * @param position
-     */
-    public void onCardDelete(int position) {
-        if(graphDetails != null) {
-            fab.startAnimation(fabIn);
-            fab.setVisibility(View.VISIBLE);
-
-            getFragmentManager().popBackStack();
-            getSupportActionBar().setDisplayHomeAsUpEnabled(false);
-            getSupportActionBar().setTitle(R.string.app_name);
-
-            graphDetails = null;
-        }
-
-        timeCards.deleteCard(position);
-    }
-
-    /**
-     *
-     * @param position
-     */
-    public void onCardChangeState(int position) {
-        timeCards.changeCardState(position);
-    }
-
-    /**
-     *
-     * @param card
-     */
-    public void onCardAdded(TimeCard card) {
-        timeCards.addCard(card);
-    }
-
     public void onSharedPreferenceChanged(SharedPreferences preferences, String key) {
         // If the settings that is changed is the notification count, then update the service notif
         // appropriately
@@ -357,6 +266,4 @@ public class MainActivity extends ActionBarActivity implements
             countService.setNotifInterval(interval);
         }
     }
-
-
 }

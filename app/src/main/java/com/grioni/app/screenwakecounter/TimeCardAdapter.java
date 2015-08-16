@@ -24,31 +24,16 @@ import java.util.List;
  * Created by Matias Grioni on 12/27/14.
  */
 public class TimeCardAdapter extends RecyclerView.Adapter<TimeCardHolder> {
-
-    private TimeCardsFragment.TimeCardDeleteListener cardDeleteListener;
-    private TimeCardsFragment.TimeCardExpandListener cardExpandListener;
-    private TimeCardsFragment.TimeCardStateListener cardStateListener;
+    private TimeCardEventListener cardEventListener;
 
     private List<TimeCard> cards;
     private Context baseContext;
 
-    /**
-     *
-     * @param activity
-     * @param cards
-     */
-    public TimeCardAdapter(Activity activity, List<TimeCard> cards) {
+    public TimeCardAdapter(Context context, List<TimeCard> cards,
+                           TimeCardEventListener cardEventListener) {
+        baseContext = context;
         this.cards = new ArrayList<TimeCard>(cards);
-
-        try {
-            cardDeleteListener = (TimeCardsFragment.TimeCardDeleteListener) activity;
-            cardExpandListener = (TimeCardsFragment.TimeCardExpandListener) activity;
-            cardStateListener = (TimeCardsFragment.TimeCardStateListener) activity;
-        } catch(ClassCastException ex) {
-            throw new ClassCastException(activity.toString() +
-                    " must implement TimeCardDeleteListener, TimeCardExpandListener, and" +
-                    " TimeCardStateListener");
-        }
+        this.cardEventListener = cardEventListener;
     }
 
     /**
@@ -59,15 +44,10 @@ public class TimeCardAdapter extends RecyclerView.Adapter<TimeCardHolder> {
      */
     @Override
     public TimeCardHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        if(baseContext == null)
-            baseContext = parent.getContext();
-
         View cardView = LayoutInflater.from(baseContext)
                 .inflate(R.layout.time_card, parent, false);
         TimeCardHolder holder = new TimeCardHolder(cardView);
-        holder.setCardExpandListener(cardExpandListener);
-        holder.setCardDeleteListener(cardDeleteListener);
-        holder.setCardStateListener(cardStateListener);
+        holder.setCardEventListener(cardEventListener);
 
         return holder;
     }
@@ -111,7 +91,7 @@ public class TimeCardAdapter extends RecyclerView.Adapter<TimeCardHolder> {
      * @param position
      */
     public void deleteCard(int position) {
-        cards.remove(position);
+        cards.remove(cards.get(position));
         notifyItemRemoved(position);
     }
 

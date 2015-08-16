@@ -26,13 +26,35 @@ import java.util.List;
  * @author - Matias Grioni
  * @created - 12/25/14
  *
- * The fragment that is opened when when a TimeCard item in the main app list is clicked. It has a
- * GraphView at the top, and the list of points below.
- * The menu items are save and delete.
+ * The Fragment that is opened when when a TimeCard item in the parent Fragment
+ * is clicked. It is to be used as a child Fragment and the parent Fragment must
+ * implement OnCardDeletedListener. This Fragment will delete cards when the menu
+ * option is chosen from TimeCardsManager and then call the callback.
  */
 public class GraphDetailFragment extends Fragment {
+    /**
+     * @author - Matias Grioni
+     * @created - 8/13/15
+     *
+     * Interface to be implemented by the parent Fragment so that when a TimeCard
+     * is deleted in this Fragment the parent can orchestrate the Fragments
+     * accordingly.
+     */
+    public interface OnCardDeletedListener {
+        /**
+         * Callback when a user deletes the TimeCard this GraphDetailFragment
+         * represents.
+         *
+         * @param position - The former position of the TimeCard in the
+         *                 TimeCardsManager TimeCards list.
+         * @param card - The card that was deleted.
+         */
+        public void onCardDeleted(int position, TimeCard card);
+    }
 
-    private TimeCardsFragment.TimeCardDeleteListener cardDeleteListener;
+    private OnCardDeletedListener cardDeletedListener;
+
+    private TimeCardsManager cardsManager;
 
     private ActionBar actionBar;
 
@@ -44,27 +66,40 @@ public class GraphDetailFragment extends Fragment {
     private TimeCard card;
     private String axis;
 
-    // The current TimeCard positions in the card list. This way the card can be deleted from the
-    // fragment menu.
+    // The position in the TimeCardsManager list of the TimeCard to be detailed.
     private int position;
+    private List<Integer> points;
+    private int count;
 
     /**
-     * Instantiates a new instance of this fragment type, using data from the TimeCard to display
-     * the graph and data points.
+     * Instantiates a new instance of this fragment type, using data from the
+     * TimeCard to display the graph and data points.
      *
-     * @param card - The TimeCard that has the data points to display.
-     * @param position - The position of this TimeCard in the global list of cards.
-     * @return - The new instance of the GraphDetailFragment using the provided params.
+     * @param position - The position of this TimeCard in the global list of
+     *                 cards.
+     * @return - The new instance of the GraphDetailFragment using the provided
+     *         params.
      */
-    public static GraphDetailFragment newInstance(TimeCard card, int position) {
+    public static GraphDetailFragment newInstance(int position) {
         GraphDetailFragment graphDetails = new GraphDetailFragment();
 
         Bundle arguments = new Bundle();
-        arguments.putParcelable("timecard", card);
         arguments.putInt("position", position);
         graphDetails.setArguments(arguments);
 
         return graphDetails;
+    }
+
+    @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+
+        try {
+            cardDeletedListener = (OnCardDeletedListener) getParentFragment();
+        } catch (ClassCastException ex) {
+            throw new ClassCastException(getParentFragment().toString() +
+                " must implement OnCardDeletedListener");
+        }
     }
 
     @Override
@@ -76,24 +111,15 @@ public class GraphDetailFragment extends Fragment {
     }
 
     @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
-
-        try {
-            cardDeleteListener = (TimeCardsFragment.TimeCardDeleteListener) activity;
-        } catch (ClassCastException ex) {
-            ex.printStackTrace();
-        }
-    }
-
-    @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        cardsManager = TimeCardsManager.getInstance(getActivity());
+
         // Setup the displayed values from the provided TimeCard.
         Bundle arguments = getArguments();
-        card = arguments.getParcelable("timecard");
         position = arguments.getInt("position");
+        card = cardsManager.getCard(position);
 
         // If this card only goes back one unit, then the axis has to break this TimeUnit into
         // smaller pieces. For example, Month -> Day, Week -> Day, Day -> Hour. Since minutes
@@ -109,6 +135,9 @@ public class GraphDetailFragment extends Fragment {
         } else {
             axis = card.interval.name();
         }
+
+        points = TimeCardUtils.getPoints(card);
+        count = TimeCardUtils.getCount(card);
     }
 
     @Override
@@ -120,16 +149,17 @@ public class GraphDetailFragment extends Fragment {
 
         graph = (GraphView) detailView.findViewById(R.id.fragment_details_graph);
         graph.setAxis(axis);
-        graph.setData(card.points);
+        graph.setData(points);
 
         indexHeader = (TextView) detailView.findViewById(R.id.column_index_header);
         indexHeader.setText(axis);
 
-        // Create the double columned list adapter to display the index inline with the data point.
+        // Create the double columned list adapter to display the index inline
+        // with the data point.
         dataList = (ListView) detailView.findViewById(R.id.graph_points);
         dataList.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE_MODAL);
-        graphDetailAdapter = new GraphDetailAdapter(getActivity(), R.layout.row_graph_detail,
-                card.points);
+        graphDetailAdapter = new GraphDetailAdapter(getActivity(),
+                R.layout.row_graph_detail, points);
         dataList.setAdapter(graphDetailAdapter);
 
         return detailView;
@@ -157,7 +187,8 @@ public class GraphDetailFragment extends Fragment {
                 break;
 
             case R.id.menu_delete:
-                cardDeleteListener.onCardDelete(position);
+                cardsManager.remove(position);
+                cardDeletedListener.onCardDeleted(position, card);
                 break;
 
         }
@@ -166,13 +197,15 @@ public class GraphDetailFragment extends Fragment {
     }
 
     /**
-     * Updates the data this fragment displays to the data in the provided TimeCard.
-     *
-     * @param card - The card whose data to show.
+     * Updates the data this Fragment displays from the TimeCardManager.
      */
-    public void update(TimeCard card) {
-        graphDetailAdapter.setData(card.points);
-        graph.setData(card.points);
+    public void update() {
+        this.card = cardsManager.getCard(position);
+        this.points = this.card.cache.points;
+        this.count = this.card.cache.count;
+
+        graphDetailAdapter.setData(points);
+        graph.setData(points);
 
         // Redraw the graph after updating its data
         graph.postInvalidate();
@@ -181,7 +214,8 @@ public class GraphDetailFragment extends Fragment {
     }
 
     /**
-     * The position of the TimeCard this Fragment is detailing in the global list of TimeCards.
+     * The position of the TimeCard this Fragment is detailing in the global
+     * list of TimeCards.
      *
      * @return - The position of the TimeCard of this Fragment.
      */
@@ -190,8 +224,8 @@ public class GraphDetailFragment extends Fragment {
     }
 
     /**
-     * Writes the data points of the TimeCard in this Fragment to an appropriately named data file,
-     * in the screewake/data folder of the sd card.
+     * Writes the data points of the TimeCard in this Fragment to an appropriately
+     * named data file, in the screewake/data folder of the sd card.
      *
      * @return - The File object of the written log file.
      */
@@ -223,16 +257,16 @@ public class GraphDetailFragment extends Fragment {
     }
 
     /**
-     * Converts the values of the TimeCard into a string where the data point index is on the left
-     * followed by a tab, and the value for that index.
+     * Converts the values of the TimeCard into a string where the data point
+     * index is on the left followed by a tab, and the value for that index.
      *
      * @return - The CSV style formatted string for writing to the file.
      */
     private String valuesToCSV() {
         String fileBuffer = axis + "\t" + "Views";
 
-        for(int i = 0; i < card.points.size(); i++)
-            fileBuffer += (i + 1) + "\t" + card.points.get(i) + "\n";
+        for(int i = 0; i < points.size(); i++)
+            fileBuffer += (i + 1) + "\t" + points.get(i) + "\n";
 
         return fileBuffer;
     }
@@ -250,9 +284,10 @@ public class GraphDetailFragment extends Fragment {
     }
 
     /**
-     * Creates the appropriate title for this Fragment. If the TimeCard goes back more than one
-     * TimeUnit then, the title should be Last x months/weeks/days... If it only goes back one
-     * TimeUnit then it should simply be Last month/week...
+     * Creates the appropriate title for this Fragment. If the TimeCard goes
+     * back more than one TimeUnit then, the title should be Last x
+     * months/weeks/days... If it only goes back one TimeUnit then it should
+     * simply be Last month/week...
      *
      * @return - The ActionBar title for this Fragment given its TimeCard.
      */
@@ -262,7 +297,7 @@ public class GraphDetailFragment extends Fragment {
             title = "Last " + card.backCount + " " + card.interval.name().toLowerCase() + "s";
         else
             title = "Last " + card.interval.name().toLowerCase();
-        title += ": " + card.count;
+        title += ": " + count;
 
         return title;
     }

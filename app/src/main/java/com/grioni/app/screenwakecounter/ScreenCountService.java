@@ -132,6 +132,9 @@ public class ScreenCountService extends Service {
     public void onDestroy() {
         if(wakeReceiver != null)
             unregisterReceiver(wakeReceiver);
+
+        // Count database is separate from lifecycle of
+        countDatabase.close();
     }
 
     /**
@@ -175,12 +178,10 @@ public class ScreenCountService extends Service {
         notifManager.notify(NOTIF_ID, notifBuilder.build());
     }
 
-    public void incrementNotif() {
-        notifCount++;
-        notifBuilder.setContentTitle(getNotifLabel() + notifCount);
-        notifManager.notify(NOTIF_ID, notifBuilder.build());
-    }
-
+    /**
+     *
+     * @return
+     */
     private String getNotifLabel() {
         String label = "Last ";
         if(backCount != 1)
@@ -191,6 +192,10 @@ public class ScreenCountService extends Service {
         return label;
     }
 
+    /**
+     *
+     * @return
+     */
     private int getNotifCount() {
         if(backCount == 1 && interval == TimeInterval.Hour) {
             return screenChangeCount;
@@ -204,11 +209,19 @@ public class ScreenCountService extends Service {
         return sum;
     }
 
+    /**
+     *
+     * @param backCount
+     */
     public void setNotifBackcount(int backCount) {
         this.backCount = backCount;
         updateNotif();
     }
 
+    /**
+     *
+     * @param interval
+     */
     public void setNotifInterval(TimeInterval interval) {
         this.interval = interval;
         updateNotif();

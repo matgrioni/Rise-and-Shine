@@ -1,64 +1,99 @@
 package com.grioni.app.screenwakecounter;
 
+import android.app.Activity;
 import android.app.Fragment;
+import android.app.FragmentManager;
+import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.ActionBarActivity;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 
 import java.util.List;
 
 /**
  * Created by Matias Grioni on 1/2/15.
  */
-public class TimeCardsFragment extends Fragment {
+public class TimeCardsFragment extends Fragment
+    implements GraphDetailFragment.OnCardDeletedListener,
+               AddCardDialogFragment.OnCardAddedListener {
 
-    /**
-     *
-     */
-    public interface TimeCardExpandListener {
-        public void expandTimeCard(TimeCard card, int position);
-    }
+    private TimeCardEventListener cardEventListener = new TimeCardEventListener() {
+        @Override
+        public void onCardClicked(int position) {
+            graphDetails = GraphDetailFragment.newInstance(position);
 
-    /**
-     *
-     */
-    public interface TimeCardDeleteListener {
-        public void onCardDelete(int id);
-    }
+            FragmentTransaction transaction = getChildFragmentManager().beginTransaction();
+            transaction.add(R.id.fragment_parent, graphDetails, "graphDetails");
+            transaction.addToBackStack(null);
+            transaction.commit();
 
-    /**
-     *
-     */
-    public interface TimeCardStateListener {
-        public void onCardChangeState(int position);
-    }
+            actionBar.setDisplayHomeAsUpEnabled(true);
+        }
 
+        @Override
+        public void onCardStateChanged(int position) {
+            timeCardsManager.changeCardState(position);
+        }
+    };
+
+    private View.OnClickListener onAddCard = new View.OnClickListener() {
+        @Override
+        public void onClick(View view) {
+            AddCardDialogFragment addCardDialog = new AddCardDialogFragment();
+            FragmentManager manager = getChildFragmentManager();
+            addCardDialog.show(manager, "add_card");
+        }
+    };
+
+    private ActionBar actionBar;
     private RecyclerView cardsRecycler;
     private TimeCardAdapter cardsAdapter;
 
-    private TimeCardsDatabase timeCardsDatabase;
-    private ScreenCountDatabase countDatabase;
+    private GraphDetailFragment graphDetails;
 
-    private List<TimeCard> cards;
-    private int startSize;
+    private FloatingActionButton fab;
+    private Animation fabIn;
+    private Animation fabOut;
+
+    private TimeCardsManager timeCardsManager;
+
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+
+        // Get the ActionBar from the Activity here rather than in onAttach
+        // since on a screen rotate or other Activity recreation, the ActionBar
+        // will be none.
+        try {
+            actionBar = ((ActionBarActivity) getActivity()).getSupportActionBar();
+        } catch (ClassCastException ex) {
+            throw new ClassCastException("Activity must be ActionbarActivity");
+        }
+
+        Fragment g = getChildFragmentManager().findFragmentByTag("graphDetails");
+        if (g != null) {
+            graphDetails = (GraphDetailFragment) g;
+            actionBar.setDisplayHomeAsUpEnabled(true);
+        }
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setHasOptionsMenu(true);
 
-        countDatabase = ScreenCountDatabase.getInstance(getActivity());
-        countDatabase.open();
-
-        timeCardsDatabase = TimeCardsDatabase.getInstance(getActivity());
-
-        timeCardsDatabase.open();
-        cards = timeCardsDatabase.getCards();
+        timeCardsManager = TimeCardsManager.getInstance(getActivity());
 
         SharedPreferences sharedPreferences = getActivity()
                 .getSharedPreferences(getString(R.string.shared_preference_file), Context.MODE_PRIVATE);
@@ -67,17 +102,13 @@ public class TimeCardsFragment extends Fragment {
         // If this is the first time the program is run, then init will be false, the default value,
         // since no value for cards_init has been written yet. Then the 3 default cards will be added.
         if(!init) {
-            cards.add(new TimeCard(TimeInterval.Day, 1));
-            cards.add(new TimeCard(TimeInterval.Week, 1));
-            cards.add(new TimeCard(TimeInterval.Month, 1));
+            timeCardsManager.addCard(new TimeCard(TimeInterval.Day, 1));
+            timeCardsManager.addCard(new TimeCard(TimeInterval.Week, 1));
+            timeCardsManager.addCard(new TimeCard(TimeInterval.Month, 1));
 
             SharedPreferences.Editor editor = sharedPreferences.edit();
             editor.putBoolean(getString(R.string.cards_init), true);
             editor.commit();
-
-            for(int i = 0; i < cards.size(); i++) {
-                timeCardsDatabase.addCard(cards.get(i));
-            }
         }
     }
 
@@ -92,103 +123,75 @@ public class TimeCardsFragment extends Fragment {
         cardsRecycler.setLayoutManager(new LinearLayoutManager(getActivity()));
         cardsRecycler.setItemAnimator(new DefaultItemAnimator());
 
-        cardsAdapter = new TimeCardAdapter(getActivity(), cards);
+        cardsAdapter = new TimeCardAdapter(getActivity(),
+                timeCardsManager.getCards(), cardEventListener);
         cardsRecycler.setAdapter(cardsAdapter);
 
-        updateCards();
+        reload();
+
+        fab = (FloatingActionButton) timeCardsView.findViewById(R.id.fab_add_time_card);
+        fab.setOnClickListener(onAddCard);
+
+        fabIn = AnimationUtils.loadAnimation(getActivity(), android.R.anim.slide_in_left);
+        fabOut = AnimationUtils.loadAnimation(getActivity(), android.R.anim.slide_out_right);
 
         return timeCardsView;
     }
 
-    /**
-     *
-     * @param card
-     */
-    public void addCard(TimeCard card) {
-        cards.add(card);
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                getChildFragmentManager().popBackStack();
+                actionBar.setDisplayHomeAsUpEnabled(false);
+                actionBar.setTitle(R.string.app_name);
+
+                graphDetails = null;
+
+                break;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
+    public void onCardAdded(TimeCard card) {
         cardsAdapter.addCard(card);
-        timeCardsDatabase.addCard(card);
     }
 
-    /**
-     *
-     * @param position
-     * @return
-     */
-    public TimeCard getCard(int position) {
-        return cards.get(position);
-    }
-
-    /**
-     *
-     * @param position
-     */
-    public void changeCardState(int position) {
-        TimeCard card = cards.get(position);
-        card.collapsed = !card.collapsed;
-
-        cards.set(position, card);
-
-        cardsAdapter.updateCard(position, card);
-        timeCardsDatabase.updateCard(position, card);
-    }
-
-    /**
-     *
-     */
-    public void incrementCards() {
-        for(int i = 0; i < cards.size(); i++) {
-            TimeCard card = cards.get(i);
-
-            card.count++;
-
-            List<Integer> points = card.points;
-            int lastPoint = points.get(points.size() - 1);
-            points.set(points.size() - 1, ++lastPoint);
-
-            card.points = points;
-
-            cards.set(i, card);
-        }
-
-        cardsAdapter.update(cards);
-    }
-
-    /**
-     *
-     */
-    public void updateCards() {
-        for(int i = 0; i < cards.size(); i++) {
-            TimeCard card = cards.get(i);
-
-            card.points = countDatabase.getCounts(card.interval, card.backCount);
-            card.count = sumPoints(card.points);
-
-            cards.set(i, card);
-        }
-
-        cardsAdapter.update(cards);
-    }
-
-    /**
-     *
-     * @param position
-     */
-    public void deleteCard(int position) {
-        cards.remove(position);
+    public void onCardDeleted(int position, TimeCard card) {
         cardsAdapter.deleteCard(position);
+
+        // Prior this following code checked if the GraphDetailsFragment was
+        // null before popping it off the backstack since this callback could
+        // be used by either the TimeCardHolder item or the GraphDetailFragment
+        // from the menu options. Since the callback is now only called from
+        // the GraphDetailFragment we can be assured that there was a
+        // GraphDetailFragment.
+        getChildFragmentManager().popBackStack();
+        actionBar.setDisplayHomeAsUpEnabled(false);
+        actionBar.setTitle(R.string.app_name);
+
+        fab.startAnimation(fabIn);
+        fab.setVisibility(View.VISIBLE);
+
+        graphDetails = null;
     }
 
     /**
      *
-     * @param points
-     * @return
      */
-    private int sumPoints(List<Integer> points) {
-        int sum = 0;
-        for(int i = 0; i < points.size(); i++)
-            sum += points.get(i);
+    public void update() {
+        cardsAdapter.update(timeCardsManager.getCards());
 
-        return sum;
+        if(graphDetails != null)
+            graphDetails.update();
+    }
+
+    /**
+     *
+     */
+    public void reload() {
+        timeCardsManager.queryAll();
+        update();
     }
 }
