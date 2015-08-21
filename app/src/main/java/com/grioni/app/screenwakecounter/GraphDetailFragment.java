@@ -161,7 +161,7 @@ public class GraphDetailFragment extends Fragment {
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
-        // menu.clear();
+        menu.findItem(R.id.settings).setVisible(false);
         inflater.inflate(R.menu.graph_details, menu);
     }
 
@@ -212,7 +212,7 @@ public class GraphDetailFragment extends Fragment {
      * @return - The CSV style formatted string for writing to the file.
      */
     private String valuesToCSV() {
-        String fileBuffer = axis + "\t" + "Views";
+        String fileBuffer = axis + "\t" + "Views\n";
 
         for(int i = 0; i < card.cache.points.size(); i++)
             fileBuffer += (i + 1) + "\t" + card.cache.points.get(i) + "\n";
