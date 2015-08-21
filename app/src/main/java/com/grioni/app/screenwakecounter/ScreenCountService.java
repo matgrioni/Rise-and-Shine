@@ -2,29 +2,34 @@ package com.grioni.app.screenwakecounter;
 
 import android.app.AlarmManager;
 import android.app.Notification;
-import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.graphics.Color;
 import android.os.Binder;
 import android.os.IBinder;
 import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
-import android.widget.Toast;
-
-import java.util.List;
 
 /**
- * Created by Matias Grioni on 12/16/14.
+ * @author - Matias Grioni
+ * @created - 12/16/14
+ *
+ * The continually running foreground service that keeps track of the current wakes in the hour. At
+ * the end of this hour, the ScreenWriteService is called to add the finished hour to the database.
  */
 public class ScreenCountService extends Service {
-
+    /**
+     * @author - Matias Grioni
+     * @created - 12/16/14
+     *
+     * A wrapper around this Service so that when it is bound to an activity the Service can be
+     * retrieved.
+     */
     public class ScreenCountBinder extends Binder {
         public ScreenCountService getService() {
             return ScreenCountService.this;
@@ -35,10 +40,10 @@ public class ScreenCountService extends Service {
     private NotificationCompat.Builder notifBuilder;
     private NotificationManagerCompat notifManager;
 
+    // The database needed to get the counts for the notification.
     private ScreenCountDatabase countDatabase;
     private int backCount;
     private TimeInterval interval;
-    private int notifCount;
 
     private BroadcastReceiver wakeReceiver;
     private ScreenCountBinder countBinder = new ScreenCountBinder();
@@ -79,9 +84,8 @@ public class ScreenCountService extends Service {
         Intent notifIntent = new Intent(getBaseContext(), MainActivity.class);
         PendingIntent pendingIntent  = PendingIntent.getActivity(getBaseContext(), 0, notifIntent, 0);
 
-        notifCount = getNotifCount();
         notifBuilder = new NotificationCompat.Builder(getBaseContext())
-                .setContentTitle(getNotifLabel() + notifCount)
+                .setContentTitle(getNotifLabel() + getNotifCount())
                 .setSmallIcon(R.drawable.ic_notif)
                 .setColor(0x039be5)
                 .setContentIntent(pendingIntent)
@@ -97,37 +101,23 @@ public class ScreenCountService extends Service {
         lastAlarmTime = SystemClock.elapsedRealtime();
     }
 
-    /**
-     *
-     * @param intent
-     * @param flags
-     * @param startId
-     * @return
-     */
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         screenChangeCount++;
         if (screenWakeListener != null)
             screenWakeListener.onScreenWake();
 
-        notifCount = getNotifCount();
-        notifBuilder.setContentTitle(getNotifLabel() + notifCount);
+        notifBuilder.setContentTitle(getNotifLabel() + getNotifCount());
         notifManager.notify(NOTIF_ID, notifBuilder.build());
 
         return START_STICKY;
     }
 
-    /**
-     * @return - null since clients can not bind to the service.
-     */
     @Override
     public IBinder onBind(Intent intent) {
         return countBinder;
     }
 
-    /**
-     *
-     */
     @Override
     public void onDestroy() {
         if(wakeReceiver != null)
@@ -138,23 +128,45 @@ public class ScreenCountService extends Service {
     }
 
     /**
+     * If a callback should be run every time the screen is woken set the callback. Allows for the
+     * Acvitity/Fragment that the Service is bound to communicate together.
      *
-     * @param screenWakeListener
+     * @param screenWakeListener - The listener to use.
      */
     public void setScreenWakeListener(ScreenWakeListener screenWakeListener) {
         this.screenWakeListener = screenWakeListener;
     }
 
     /**
+     * Get the last time the database was written to. The number returned is in the format of
+     * SystemClock.elapsedRealtime().
      *
-     * @return
+     * @return - The elapsed real time figure of the last write time to the database.
+     */
+    public static long getLastAlarmTime() {
+       return lastAlarmTime;
+    }
+
+    /**
+     * Updates the notification counter with the correct count and label.
+     */
+    public void updateNotif() {
+        notifBuilder.setContentTitle(getNotifLabel() + getNotifCount());
+        notifManager.notify(NOTIF_ID, notifBuilder.build());
+    }
+
+    /**
+     * Gets the amount of screen wakes in the last/current hour.
+     *
+     * @return - The screen wakes in the last hour.
      */
     public static int getHourCount() {
         return screenChangeCount;
     }
 
     /**
-     *
+     * Sets the screen wakes for the last hour to 0 and sets the last write time to the database to
+     * the current time.
      */
     public static void reset() {
         screenChangeCount = 0;
@@ -162,25 +174,9 @@ public class ScreenCountService extends Service {
     }
 
     /**
+     * Get the label (the part before the colon in the notification) for this Service.
      *
-     * @return
-     */
-    public static long getLastAlarmTime() {
-       return lastAlarmTime;
-    }
-
-    /**
-     *
-     */
-    public void updateNotif() {
-        notifCount = getNotifCount();
-        notifBuilder.setContentTitle(getNotifLabel() + notifCount);
-        notifManager.notify(NOTIF_ID, notifBuilder.build());
-    }
-
-    /**
-     *
-     * @return
+     * @return - The label for the Notification for this Service.
      */
     private String getNotifLabel() {
         String label = "Last ";
@@ -193,25 +189,21 @@ public class ScreenCountService extends Service {
     }
 
     /**
+     * Get the amount of screen wakes for the interval and back count specified for this Service.
      *
-     * @return
+     * @return - The amount of screen wakes to display for the notification.
      */
     private int getNotifCount() {
-        if(backCount == 1 && interval == TimeInterval.Hour) {
+        if(backCount == 1 && interval == TimeInterval.Hour)
             return screenChangeCount;
-        }
 
-        int sum = 0;
-        List<Integer> points = countDatabase.getCounts(interval, backCount);
-        for(int i = 0; i < points.size(); i++)
-            sum += points.get(i);
-
-        return sum;
+        return countDatabase.getCount(interval, backCount);
     }
 
     /**
+     * Set the back count for the Notification and update the notification after.
      *
-     * @param backCount
+     * @param backCount  - The new back count for the notification.
      */
     public void setNotifBackcount(int backCount) {
         this.backCount = backCount;
@@ -219,8 +211,9 @@ public class ScreenCountService extends Service {
     }
 
     /**
+     * Set the TimeInterval for the Notification and update the notification after.
      *
-     * @param interval
+     * @param interval - The new TimeInterval for the notification.
      */
     public void setNotifInterval(TimeInterval interval) {
         this.interval = interval;

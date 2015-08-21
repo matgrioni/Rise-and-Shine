@@ -35,7 +35,7 @@ public class TimeCardUtils {
      * @return - The amount of screen wakes for the TimeCard.
      */
     public static int getCount(TimeCard card) {
-        int count = sumPoints(TimeCardUtils.getPoints(card));
+        int count = countDatabase.getCount(card.interval, card.backCount);
         return count;
     }
 
@@ -46,22 +46,7 @@ public class TimeCardUtils {
      * @return - The list of points of screen wakes for the given TimeCard.
      */
     public static List<Integer> getPoints(TimeCard card) {
-        List<Integer> points = countDatabase.getCounts(card.interval, card.backCount);
+        List<Integer> points = countDatabase.getEntries(card.interval, card.backCount);
         return points;
-    }
-
-    /**
-     * Sums a list of integers.
-     *
-     * @param points - The list of integers to sum.
-     * @return - The sum of the items in the integer list.
-     */
-    private static int sumPoints(List<Integer> points) {
-        int sum = 0;
-
-        for (int point : points)
-            sum += point;
-
-        return sum;
     }
 }

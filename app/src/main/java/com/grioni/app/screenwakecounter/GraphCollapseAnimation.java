@@ -3,7 +3,6 @@ package com.grioni.app.screenwakecounter;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.Transformation;
-import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 
 /**
@@ -35,14 +34,21 @@ public class GraphCollapseAnimation extends Animation {
         animatedView = view;
         layoutParams = (RelativeLayout.LayoutParams) view.getLayoutParams();
 
+        // The margin starts at whatever the view is currently at, then would
+        // end at 0 if the margin is already negative. If the margin is at
+        // least positive or 0 then we end the margin animation once the entire
+        // height is covered by the margin.
         marginStart = layoutParams.bottomMargin;
-        marginEnd = (marginStart == 0) ? (-1 * view.getHeight()) : 0;
+        marginEnd = (marginStart < 0) ? 0 : (-1 * view.getHeight());
     }
 
     @Override
     protected void applyTransformation(float interpolatedTime, Transformation t) {
         super.applyTransformation(interpolatedTime, t);
 
+        // If the animation is still ongoing then move the margins as necessary.
+        // Once the animation has ended ensure the interpolatedTime did the
+        // right thing and got the margin to the end.
         if(interpolatedTime < 1.0f) {
             layoutParams.bottomMargin = marginStart + (int) ((marginEnd - marginStart) * interpolatedTime);
             animatedView.requestLayout();

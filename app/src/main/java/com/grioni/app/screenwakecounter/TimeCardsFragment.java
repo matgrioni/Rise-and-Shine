@@ -1,6 +1,5 @@
 package com.grioni.app.screenwakecounter;
 
-import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
@@ -9,6 +8,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -18,8 +18,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-
-import java.util.List;
 
 /**
  * Created by Matias Grioni on 1/2/15.
@@ -76,7 +74,7 @@ public class TimeCardsFragment extends Fragment
         // since on a screen rotate or other Activity recreation, the ActionBar
         // will be none.
         try {
-            actionBar = ((ActionBarActivity) getActivity()).getSupportActionBar();
+            actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
         } catch (ClassCastException ex) {
             throw new ClassCastException("Activity must be ActionbarActivity");
         }
@@ -119,7 +117,7 @@ public class TimeCardsFragment extends Fragment
         View timeCardsView = inflater.inflate(R.layout.fragment_time_cards, container, false);
 
         cardsRecycler = (RecyclerView) timeCardsView.findViewById(R.id.time_cards_recycler);
-        cardsRecycler.addItemDecoration(new CardItemDecorator(getActivity()));
+        cardsRecycler.addItemDecoration(new TimeCardItemBottomBorder(getActivity()));
         cardsRecycler.setLayoutManager(new LinearLayoutManager(getActivity()));
         cardsRecycler.setItemAnimator(new DefaultItemAnimator());
 
@@ -155,6 +153,10 @@ public class TimeCardsFragment extends Fragment
     }
 
     public void onCardAdded(TimeCard card) {
+        // Since the card that was added is unqueried/cache is empty, we have
+        // to query the card which would be the last card in the list since it
+        // was just added.
+        timeCardsManager.queryLast();
         cardsAdapter.addCard(card);
     }
 

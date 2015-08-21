@@ -10,25 +10,23 @@ import android.view.View;
  * @author - Matias Grioni
  * @created - 1/25/15.
  *
- *
+ * The bottom border that follows the padding of the RecyclerView items. The
+ * border will not extend through the padding, it will stop short of the left
+ * and right padding.
  */
 public class TimeCardItemBottomBorder extends RecyclerView.ItemDecoration {
     private Drawable divider;
 
     /**
+     * Create the ItemDecorator.
      *
-     * @param context
+     * @param context - Context to load the image resource for the border.
      */
     public TimeCardItemBottomBorder(Context context) {
         divider = context.getResources().getDrawable(R.drawable.card_divider);
     }
 
-    /**
-     *
-     * @param canvas
-     * @param parent
-     * @param state
-     */
+    @Override
     public void onDraw(Canvas canvas, RecyclerView parent, RecyclerView.State state) {
         // Get the left and right edge of the non-padded view so that the
         // divider ends before the screen edges.

@@ -15,9 +15,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by Matias Grioni on 5/15/15.
+ * @author - Matias Grioni
+ * @created - 5/15/15
+ *
+ * The preference dialog to choose which interval and backcount to display for the notification.
  */
 public class NotificationPickerPreference extends DialogPreference {
+    /**
+     * @author - Matias Grioni
+     * @created - 5/15/15
+     *
+     *
+     */
     private static class SavedState extends BaseSavedState {
         public static final Parcelable.Creator<SavedState> CREATOR = new Creator<SavedState>() {
             @Override
@@ -59,6 +68,11 @@ public class NotificationPickerPreference extends DialogPreference {
 
     private String preference = "";
 
+    /**
+     *
+     * @param context
+     * @param attrs
+     */
     public NotificationPickerPreference(Context context, AttributeSet attrs) {
         super(context, attrs);
 
@@ -140,6 +154,10 @@ public class NotificationPickerPreference extends DialogPreference {
         return a.getString(index);
     }
 
+    /**
+     *
+     * @param value
+     */
     private void updateViews(String value) {
         // Set the number preference
         int split = value.indexOf(" ");
@@ -151,6 +169,10 @@ public class NotificationPickerPreference extends DialogPreference {
         intervalType.setSelection(INTERVALS.indexOf(intervalStr));
     }
 
+    /**
+     *
+     * @return
+     */
     private String getValue() {
         return backCount.getText().toString() +  " " + intervalType.getSelectedItem().toString();
     }

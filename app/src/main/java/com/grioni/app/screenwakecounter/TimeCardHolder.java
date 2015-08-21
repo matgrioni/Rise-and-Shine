@@ -46,7 +46,7 @@ public class TimeCardHolder extends RecyclerView.ViewHolder {
             else if(layoutParams.bottomMargin < 0)
                 ((ImageView) v).setImageResource(R.drawable.card_collapse);
 
-            GraphAnimation animation = new GraphAnimation(graph, 500);
+            GraphCollapseAnimation animation = new GraphCollapseAnimation(graph, 500);
             animation.setAnimationListener(graphAnimListener);
             graph.startAnimation(animation);
         }

@@ -15,21 +15,26 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by Matias Grioni on 12/27/14.
+ * @author - Matias Grioni
+ * @created - 12/27/14
+ *
+ * Displays a Graph or plot of the provided points. The colors of the line and area beneath it can
+ * be set in the xml resources.
  */
 public class GraphView extends View {
-    private static float AXIS_PADDING = 5;
-    private static float TOP_GRAPH_PADDING = 7;
+    // The unscaled margin between the axis line and the edge of the view and the margin between the
+    // top edge and the top of the graph.
+    private static final float UNSCALED_AXIS_MARGIN = 5;
+    private static final float UNSCALED_TOP_MARGIN = 7;
 
-    private static long REARRANGE_GRAPH_ANIM_LENGTH = 250;
     private static long POINT_ADD_ANIM_LENGTH = 250;
     private long animStartTime = 0;
     private int nextPoint;
 
-    private int pixelAxisPadding;
-    private int topPixelGraphPadding;
+    private int scaledAxisMargin;
+    private int scaledTopMargin;
 
-    private String xaxis;
+    private String xAxisLabel;
     private List<Integer> points;
 
     private int textSize;
@@ -46,41 +51,49 @@ public class GraphView extends View {
     private int shadeColor;
 
     /**
+     * Create the GraphView given the context.
      *
-     * @param context
+     * @param context - Context to create the GraphView with.
      */
     public GraphView(Context context) {
         super(context);
-        init(null);
+        initAttrs(null);
     }
 
     /**
+     * Create the GraphView given the context and xml attributes.
      *
-     * @param context
-     * @param attrs
+     * @param context - Context to create the GraphView with.
+     * @param attrs - XML attributes for the GraphView.
      */
     public GraphView(Context context, AttributeSet attrs) {
         super(context, attrs);
-        init(attrs);
+        initAttrs(attrs);
     }
 
     /**
+     * Create the GraphView given the context, xml attributes, and default style.
      *
-     * @param context
-     * @param attrs
-     * @param defStyle
+     * @param context - Context to create the GraphView with.
+     * @param attrs - XML attributes for the GraphView.
+     * @param defStyle - The default style resource for the view.
      */
     public GraphView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
-        init(attrs);
+        initAttrs(attrs);
     }
 
-    private void init(AttributeSet attrs) {
+    /**
+     * Initialize the attributes for this GraphView based on the xml attributes provided.
+     *
+     * @param attrs - The attribute set to use to get the xml definition.
+     */
+    private void initAttrs(AttributeSet attrs) {
         TypedArray arr = getContext().getTheme().obtainStyledAttributes(attrs, R.styleable.GraphView, 0, 0);
         final float scale = getResources().getDisplayMetrics().density;
 
-        pixelAxisPadding = (int) (AXIS_PADDING * scale);
-        topPixelGraphPadding = (int) (TOP_GRAPH_PADDING * scale);
+        scaledAxisMargin = (int) (UNSCALED_AXIS_MARGIN * scale);
+        scaledTopMargin = (int) (UNSCALED_TOP_MARGIN * scale);
 
         try {
             float unscaledText = arr.getDimension(R.styleable.GraphView_textSize, 12);
@@ -97,7 +110,7 @@ public class GraphView extends View {
     public void draw(Canvas canvas) {
         super.draw(canvas);
 
-        drawGraphLabels(canvas);
+        drawAxisLabels(canvas);
         drawAxes(canvas);
 
         if(points != null) {
@@ -108,29 +121,34 @@ public class GraphView extends View {
         }
     }
 
-    private void drawGraphLabels(Canvas canvas) {
+    /**
+     *
+     * @param canvas
+     */
+    private void drawAxisLabels(Canvas canvas) {
+        // Create a paint object that is antialiased and has the desired textsize.
         Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
         paint.setTextAlign(Paint.Align.LEFT);
         paint.setTextSize(textSize);
 
-        // Draw the axes for the graph including labels
-        Rect xaxisBounds = new Rect();
-        paint.getTextBounds(xaxis, 0, xaxis.length(), xaxisBounds);
-        canvas.drawText(xaxis, getWidth() / 2 - xaxisBounds.width() / 2,
-                getHeight() - xaxisBounds.bottom, paint);
+        //
+        Rect xAxisBounds = new Rect();
+        paint.getTextBounds(xAxisLabel, 0, xAxisLabel.length(), xAxisBounds);
+        canvas.drawText(xAxisLabel, getWidth() / 2 - xAxisBounds.width() / 2,
+                getHeight() - xAxisBounds.bottom, paint);
 
-        Rect yaxisBounds = new Rect();
-        paint.getTextBounds("Views", 0, 5, yaxisBounds);
+        Rect yAxisBounds = new Rect();
+        paint.getTextBounds("Views", 0, 5, yAxisBounds);
 
         canvas.save();
-        canvas.rotate(-90.f, yaxisBounds.height(), getHeight() / 2 + yaxisBounds.width() / 2);
-        canvas.drawText("Views", yaxisBounds.height(), getHeight() / 2 + yaxisBounds.width() / 2, paint);
+        canvas.rotate(-90.f, yAxisBounds.height(), getHeight() / 2 + yAxisBounds.width() / 2);
+        canvas.drawText("Views", yAxisBounds.height(), getHeight() / 2 + yAxisBounds.width() / 2, paint);
         canvas.restore();
 
-        graphStartX = yaxisBounds.height() + pixelAxisPadding;
-        graphStartY = getHeight() - xaxisBounds.height() - pixelAxisPadding;
+        graphStartX = yAxisBounds.height() + scaledAxisMargin;
+        graphStartY = getHeight() - xAxisBounds.height() - scaledAxisMargin;
 
-        graphHeight = graphStartY - topPixelGraphPadding;
+        graphHeight = graphStartY - scaledTopMargin;
         graphWidth = getWidth() - graphStartX;
     }
 
@@ -244,7 +262,7 @@ public class GraphView extends View {
     public void setAxis(String xaxis) {
         if(xaxis == null)
             xaxis = "";
-        this.xaxis = xaxis;
+        this.xAxisLabel = xaxis;
     }
 
     /**

@@ -41,14 +41,58 @@ public class AddCardDialogFragment extends DialogFragment {
         /**
          * Callback for when the user creates a TimeCard using this dialog.
          *
-         * @param card - The card that was added.
+         * @param card - The card that was added. This card is unqueried.
          */
         public void onCardAdded(TimeCard card);
     }
 
-    private TimeCardsManager cardsManager;
+    private DialogInterface.OnClickListener onPositiveButton =
+            new DialogInterface.OnClickListener() {
+        @Override
+        public void onClick(DialogInterface dialog, int which) {
+            // Get the preference if the card should be collapsed.
+            SharedPreferences preferences =
+                    PreferenceManager.getDefaultSharedPreferences(getActivity());
+            final boolean collapsed = preferences.
+                    getBoolean("pref_card_collapsed", true);
 
+            String backCountStr = backCountView.getText().toString();
+            String spinnerItem = cardTypeView.getSelectedItem().toString();
+            TimeInterval interval = TimeInterval.valueOf(spinnerItem);
+
+            // If the number input was not a positive integer then notify
+            // the user of the input error. The number may still cause an
+            // overflow error so surround the parsing in a try-catch, to
+            // make sure not number too large is parsed.
+            if (isPositiveNumber(backCountStr)) {
+                // If the number is able to be parsed, a TimeCard is created
+                // using the data and the points generated from the database.
+                try {
+                    // Try to parse the input and get the data from this input.
+                    int backCount = Integer.parseInt(backCountStr);
+                    TimeCard card = new TimeCard(interval, backCount, collapsed);
+
+                    // Add the card to the model, and notify the listener the
+                    // card was added. THe card has not been queried yet.
+                    cardsManager.addCard(card);
+                    cardAddedListener.onCardAdded(card);
+                } catch (NumberFormatException ex) {
+                    ex.printStackTrace();
+                    Toast.makeText(getActivity(), backCountStr + " is too large",
+                            Toast.LENGTH_SHORT).show();
+                }
+            } else {
+                Toast.makeText(getActivity(), backCountStr + "is not a valid positive number",
+                        Toast.LENGTH_SHORT).show();
+            }
+        }
+    };
+
+    private TimeCardsManager cardsManager;
     private OnCardAddedListener cardAddedListener;
+
+    private EditText backCountView;
+    private Spinner cardTypeView;
 
     @Override
     public void onAttach(Activity activity) {
@@ -66,70 +110,29 @@ public class AddCardDialogFragment extends DialogFragment {
 
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
-        SharedPreferences preferences =
-                PreferenceManager.getDefaultSharedPreferences(getActivity());
-        final boolean collapsed = preferences.
-                getBoolean("pref_card_collapsed", true);
-
         // Get the LayoutInflater and inflate the dialog view and get the
         // needed child views.
         LayoutInflater inflater = getActivity().getLayoutInflater();
 
         View dialogView = inflater.inflate(R.layout.dialog_add_card, null);
-        final EditText backCountText = (EditText) dialogView.findViewById(R.id.dialog_back_count);
-        final Spinner cardTypeSpinner =
-                (Spinner) dialogView.findViewById(R.id.dialog_card_type);
+        backCountView = (EditText) dialogView.findViewById(R.id.dialog_back_count);
+        cardTypeView = (Spinner) dialogView.findViewById(R.id.dialog_card_type);
 
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(getActivity(),
                 android.R.layout.simple_list_item_1, getIntervals());
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        cardTypeSpinner.setAdapter(adapter);
+        cardTypeView.setAdapter(adapter);
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-        builder.setView(dialogView)
-        .setPositiveButton(R.string.add, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                String backCountStr = backCountText.getText().toString();
-                String spinnerItem = cardTypeSpinner.getSelectedItem().toString();
-                TimeInterval interval = TimeInterval.valueOf(spinnerItem);
-
-                // If the number input was not a positive integer then notify
-                // the user of the input error. The number may still cause an
-                // overflow error so surround the parsing in a try-catch, to
-                // make sure not number too large is parsed.
-                if (isPositiveNumber(backCountStr)) {
-                    // If the number is able to be parsed, a TimeCard is created
-                    // using the data and the points generated from the database.
-                    try {
-                        // Try to parse the input and get the data from this input.
-                        int backCount = Integer.parseInt(backCountStr);
-                        TimeCard card = new TimeCard(interval, backCount, collapsed);
-
-                        // Add the card to the model, and notify the listener the
-                        // card was added.
-                        cardsManager.addCard(card);
-                        card = cardsManager.query(cardsManager.getCards().size() - 1);
-                        cardAddedListener.onCardAdded(card);
-                    } catch (NumberFormatException ex) {
-                        ex.printStackTrace();
-                        Toast.makeText(getActivity(), backCountStr + " is too large",
-                                Toast.LENGTH_SHORT).show();
+        return new AlertDialog.Builder(getActivity())
+                .setView(dialogView)
+                .setPositiveButton(R.string.add, onPositiveButton)
+                .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        getDialog().cancel();
                     }
-                } else {
-                    Toast.makeText(getActivity(), backCountStr + "is not a valid positive number",
-                            Toast.LENGTH_SHORT).show();
-                }
-            }
-        })
-        .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                getDialog().cancel();
-            }
-        });
-
-        return builder.create();
+                })
+                .create();
     }
 
     /**

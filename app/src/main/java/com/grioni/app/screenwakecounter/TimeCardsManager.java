@@ -185,6 +185,15 @@ public class TimeCardsManager {
     }
 
     /**
+     * Convenience method to query the last TimeCard in the list.
+     *
+     * @return - The last TimeCard with a modified cache.
+     */
+    public TimeCard queryLast() {
+        return this.query(cards.size() - 1);
+    }
+
+    /**
      * Convenience method for querying all the TimeCards in the list.
      */
     public void queryAll() {
@@ -202,10 +211,11 @@ public class TimeCardsManager {
             // Increment the total count for the card and also increment the last point of the card.
             card.cache.count++;
 
+            // Don't need to reassign to card.cache.points since aliasing
+            // occurs. points references the same location as card.cache.points
             List<Integer> points = card.cache.points;
             int lastPoint = points.get(points.size() - 1);
             points.set(points.size() - 1, ++lastPoint);
-            card.cache.points = points;
 
             this.updateCard(i, card);
         }

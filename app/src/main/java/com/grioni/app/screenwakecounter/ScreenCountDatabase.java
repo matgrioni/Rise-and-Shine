@@ -10,7 +10,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by Matias Grioni on 12/16/14.
+ * @author - Matias Grioni
+ * @created - 12/16/14
+ *
+ * Access to the database that keeps track of the screen wakes per hour, day, week, and month. Given
+ * a TimeInterval and how far back to go, the ScreenCountDatabase instance can return the list of
+ * points for that time period. This class uses a singleton instance.
  */
 public class ScreenCountDatabase {
     public static final int DAY_TO_HOUR = 24;
@@ -23,7 +28,7 @@ public class ScreenCountDatabase {
     private TimeCounterHelper tcHelper;
     private String[] columns = { TimeCounterHelper.COLUMN_ID, TimeCounterHelper.COLUMN_COUNT };
 
-    // The row size / length of the respective databases. The hour table is an
+    // The row size / length of the respective tables. The hour table is an
     // irregularity because once the first day passes the hour rows are reused
     // so the size is usually 24. So hourSize is really the current hour of the
     // day we are currently on.
@@ -33,9 +38,10 @@ public class ScreenCountDatabase {
     private static int monthSize = 0;
 
     /**
+     * Create a new instance or get the already created instance for ScreenCountDatabase.
      *
-     * @param context
-     * @return
+     * @param context - The Context to create the ScreenCountDatabase instance with.
+     * @return - The ScreenCountDatabase instance.
      */
     public static ScreenCountDatabase getInstance(Context context) {
         if(instance == null)
@@ -45,34 +51,48 @@ public class ScreenCountDatabase {
     }
 
     /**
+     * Creates a new ScreenCountDatabase object. To access the global instance use the
+     * getInstance method.
      *
-     * @param context
+     * @param context - The Context to create the database object with.
      */
-    public ScreenCountDatabase(Context context) {
+    private ScreenCountDatabase(Context context) {
         tcHelper = new TimeCounterHelper(context);
     }
 
     /**
+     * Should be called before any data retrieval or modifications to the database. Opens the
+     * database.
      *
+     * @throws SQLException - If the database can not be opened for writing.
      */
     public void open() throws SQLException {
         database = tcHelper.getWritableDatabase();
 
-        daySize = getTableSize(TimeCounterHelper.TABLE_DAY_NAME);
-        weekSize = getTableSize(TimeCounterHelper.TABLE_WEEK_NAME);
-        monthSize = getTableSize(TimeCounterHelper.TABLE_MONTH_NAME);
+        // Get the current table size. Important if the app crashed or was closed and it needs to be
+        // restarted from where it was left off.
+        daySize = queryTableSize(TimeCounterHelper.TABLE_DAY_NAME);
+        weekSize = queryTableSize(TimeCounterHelper.TABLE_WEEK_NAME);
+        monthSize = queryTableSize(TimeCounterHelper.TABLE_MONTH_NAME);
     }
 
     /**
-     *
+     * Closes the database once it's not needed anymore. If the database is to be used again a call
+     * to open must follow.
      */
     public void close() {
         database.close();
     }
 
     /**
+     * Puts the number in the correct location in the hour table. If it is currently the 7th hour
+     * then adding an hour will put the number in the 7th position of the hour table. If the hour is
+     * the 24th hour then the day counter will be incremented. If the day counter is on the 7th day
+     * then the week counter will be incremented and so on.
      *
-     * @param hourCount
+     * Handles all the logic behind moving up in the table based on one more hour being added.
+     *
+     * @param hourCount - The number of screen wakes in the last hour to put in the table.
      */
     public void addHour(int hourCount) {
         ContentValues values = new ContentValues();
@@ -81,24 +101,30 @@ public class ScreenCountDatabase {
         updateTable(TimeInterval.Hour, values);
         hourSize++;
 
+        // Once we reach the DAY_TO_HOUR number or more sum the last hours starting from now and
+        // this sum of all the hours in the last day is put into the day table.
         if(hourSize > DAY_TO_HOUR - 1) {
-            values.put("count", sumCount(TimeInterval.Hour));
+            values.put("count", sumIntervalEntries(TimeInterval.Hour));
             updateTable(TimeInterval.Day, values);
 
             hourSize = 0;
             daySize++;
         }
 
-        if(daySize != 0 && hourSize == 0) {
+        // If this is the first day then day % WEEK_TO_DAY will return 0 so check against that.
+        // Second we have to make sure this is the start of the day with hourSize == 0. If
+        // day % WEEK_TO_DAY == 0, it will for all hours of that day, so we have to make sure we
+        // only add it to the week table once. The same goes for the month check.
+        if (daySize != 0 && hourSize == 0) {
             if(daySize % WEEK_TO_DAY == 0) {
-                values.put("count", sumCount(TimeInterval.Day, WEEK_TO_DAY));
+                values.put("count", sumIntervalEntries(TimeInterval.Day, WEEK_TO_DAY));
                 updateTable(TimeInterval.Week, values);
 
                 weekSize++;
             }
 
             if(daySize % MONTH_TO_DAY == 0) {
-                values.put("count", sumCount(TimeInterval.Day, MONTH_TO_DAY));
+                values.put("count", sumIntervalEntries(TimeInterval.Day, MONTH_TO_DAY));
                 updateTable(TimeInterval.Month, values);
 
                 monthSize++;
@@ -107,26 +133,144 @@ public class ScreenCountDatabase {
     }
 
     /**
+     * Queries the corresponding TimeInterval and sums the last backCount entries in that table.
+     * Result is equivalent to summing the items in the list from getEntries.
      *
-     * @param interval
-     * @param backCount
-     * @return
+     * @param interval - The TimeInterval whose corresponding table to query for the entries.
+     * @param backCount - How far back to go in the table including the current entry.
+     * @return - The sum of all the selected entries in the table for the TimeInterval.
      */
-    private int sumCount(TimeInterval interval, int backCount) {
-        int sum = 0;
-        String tableName = getTableName(interval);
-        int lastIndex = getTableSize(interval);
-        int start = (lastIndex - backCount < 0) ? 1 : lastIndex - backCount + 1;
+    public int getCount(TimeInterval interval, int backCount) {
+        if(backCount == 1) {
+            backCount = convertSingleton(interval);
 
-        Cursor cursor = database.query(tableName, new String[] {TimeCounterHelper.COLUMN_COUNT},
-                TimeCounterHelper.COLUMN_ID + " >= " + Integer.toString(start)
-                + " and " + TimeCounterHelper.COLUMN_ID + " <= " + Integer.toString(lastIndex)
-                , null, null, null, null);
+            if(interval == TimeInterval.Day)
+                interval = TimeInterval.Hour;
+            else if(interval != TimeInterval.Hour)
+                interval = TimeInterval.Day;
+        }
 
+        // Add together the TimeInterval entries that have already occurred and are written to the
+        // database. Would not include current TimeInterval.
+        int entryCount = getEntryCount(interval);
+        int start = (entryCount - (backCount - 1)) < 0 ? 1 : entryCount - (backCount - 1) + 1;
+        Cursor cursor = getEntriesCursor(interval, start);
         cursor.moveToFirst();
+
+        int sum = 0;
         while(!cursor.isAfterLast()) {
             sum += cursor.getInt(0);
+            cursor.moveToNext();
+        }
+        cursor.close();
 
+        sum += currentIntervalCount(interval);
+
+        return sum;
+    }
+
+    /**
+     * Queries the tables for the last desired entries, including the current entry, for the
+     * TimeInterval. Returns a list of all the entries for that TimeInterval, with the item order
+     * being chronological. The last point is the current entry.
+     *
+     * @param interval - The TimeInterval whose corresponding table to query.
+     * @param backCount - How far back to go in the table including the current entry.
+     * @return - A list of the entries with a length of backCount corresponding to the table for
+     *         TimeInterval.
+     */
+    public List<Integer> getEntries(TimeInterval interval, int backCount) {
+        if(backCount == 1) {
+            backCount = convertSingleton(interval);
+
+            if(interval == TimeInterval.Day)
+                interval = TimeInterval.Hour;
+            else if(interval != TimeInterval.Hour)
+                interval = TimeInterval.Day;
+        }
+
+        // Add together the TimeInterval entries that have already occurred and are written to the
+        // database. Would not include current TimeInterval.
+        int entryCount = getEntryCount(interval);
+        int start = (entryCount - (backCount - 1)) < 0 ? 1 : entryCount - (backCount - 1) + 1;
+        Cursor cursor = getEntriesCursor(interval, start);
+        cursor.moveToFirst();
+
+        List<Integer> data = new ArrayList<Integer>();
+        while(!cursor.isAfterLast()) {
+            data.add(cursor.getInt(0));
+            cursor.moveToNext();
+        }
+        cursor.close();
+
+        data.add(currentIntervalCount(interval));
+
+        return data;
+    }
+
+    /**
+     * Gets the current screen wake count for the desired interval.
+     *
+     * @param interval - The TimeInterval to find the current screen wake count for.
+     * @return - The current screen wake count for a given TimeInterval.
+     */
+    private int currentIntervalCount(TimeInterval interval) {
+        // Sum up the current TimeInterval. If we want the hour points, then the last hour is only
+        // the ScreenCountService count. If the interval is a day then we have to include all the
+        // current hours of this day in the count. If it's a week or month, we have to include the
+        // the days leading up to the current day.
+        int current = ScreenCountService.getHourCount();
+        if(interval != TimeInterval.Hour) {
+            if(interval != TimeInterval.Day) {
+                int intervalCount = daySize / convertSingleton(interval);
+                current += sumIntervalEntries(TimeInterval.Day,
+                        getEntryCount(TimeInterval.Day) - intervalCount * convertSingleton(interval));
+            }
+
+            current += sumIntervalEntries(TimeInterval.Hour);
+        }
+
+        return current;
+    }
+
+    /**
+     * Gives a cursor that queries the table for the given TimeInterval starting from the row with
+     * an id of start until the end of the table.
+     *
+     * @param interval - The TimeInterval whose corresponding table to query.
+     * @param start - The id of the first row in the cursor.
+     * @return - The cursor object that will transverse rows in the table for the TimeInterval from
+     *         the row with an id of start to the last entry.
+     */
+    private Cursor getEntriesCursor(TimeInterval interval, int start) {
+        int end = getEntryCount(interval);
+        String table = getTableName(interval);
+
+        return database.query(table, new String[] {TimeCounterHelper.COLUMN_COUNT},
+                TimeCounterHelper.COLUMN_ID + " >= " + Integer.toString(start)
+                + " and " + TimeCounterHelper.COLUMN_ID + " <= " + Integer.toString(end),
+                null, null, null, null);
+    }
+
+    /**
+     * Sums the desired last entries for a provided table type in the database. This sum does not
+     * include the current hour/day/month figure, only what has already been written to the database
+     * and is not currently happening. This is more a convenience method
+     *
+     * @param interval - The TimeInterval whose corresponding table to query.
+     * @param backCount - How far back to go in the table not including the current entry.
+     * @return - The sum of the desired entries.
+     */
+    private int sumIntervalEntries(TimeInterval interval, int backCount) {
+        int entryCount = getEntryCount(interval);
+        int start = (entryCount - backCount < 0) ? 1 : entryCount - backCount + 1;
+
+        Cursor cursor = getEntriesCursor(interval, start);
+        cursor.moveToFirst();
+
+        int sum = 0;
+        while(!cursor.isAfterLast()) {
+            sum += cursor.getInt(0);
             cursor.moveToNext();
         }
 
@@ -135,80 +279,25 @@ public class ScreenCountDatabase {
     }
 
     /**
+     * Sums all the entries for the provided TimeInterval.
      *
-     * @param interval
-     * @return
+     * @param interval - The TimeInterval for which to sum all the entries in the corresponding
+     *                 table.
+     * @return - The sum of all the entries in the corresponding table for the TimeInterval.
      */
-    private int sumCount(TimeInterval interval) {
-        return sumCount(interval, getTableSize(interval));
+    private int sumIntervalEntries(TimeInterval interval) {
+        return sumIntervalEntries(interval, getEntryCount(interval));
     }
 
     /**
+     * Adds the provided ContentValues to the table for the TimeInterval. If the table is cyclical
+     * then the row will be overwritten when needed, for example with the hour table.
      *
-     * @param backCount
-     * @param interval
-     * @return
-     */
-    public List<Integer> getData(TimeInterval interval, int backCount) {
-        int count = backCount;
-        if(backCount == 1) {
-            count = convertSingleton(interval);
-
-            if(interval == TimeInterval.Day)
-                interval = TimeInterval.Hour;
-            else if(interval != TimeInterval.Hour)
-                interval = TimeInterval.Day;
-        }
-
-        String table = getTableName(interval);
-        List<Integer> data = new ArrayList<Integer>();
-        int lastIndex = getTableSize(interval);
-        int start = (lastIndex - (count - 1)) < 0 ? 1 : lastIndex - (count - 1) + 1;
-
-        Cursor cursor = database.query(table, new String[] {TimeCounterHelper.COLUMN_COUNT},
-                TimeCounterHelper.COLUMN_ID + " >= " + Integer.toString(start)
-                + " and " + TimeCounterHelper.COLUMN_ID + " <= " + Integer.toString(lastIndex),
-                null, null, null, null);
-        cursor.moveToFirst();
-        while(!cursor.isAfterLast()) {
-            data.add(cursor.getInt(0));
-            cursor.moveToNext();
-        }
-
-        int extra = ScreenCountService.getHourCount();
-        if(interval != TimeInterval.Hour) {
-            if(interval != TimeInterval.Day) {
-                int intervalCount = daySize / convertSingleton(interval);
-                extra += sumCount(TimeInterval.Day,
-                        getTableSize(TimeInterval.Day) - intervalCount * convertSingleton(interval));
-            }
-
-            extra += sumCount(TimeInterval.Hour);
-        }
-
-        data.add(extra);
-        cursor.close();
-
-        return data;
-    }
-
-    /**
-     *
-     * @param interval
-     * @param backCount
-     * @return
-     */
-    public List<Integer> getCounts(TimeInterval interval, int backCount) {
-        return getData(interval, backCount);
-    }
-
-    /**
-     *
-     * @param interval
-     * @param values
+     * @param interval - The table to update.
+     * @param values - The ContentValues object which has the amount of wakes to add to the table.
      */
     private void updateTable(TimeInterval interval, ContentValues values) {
-        int index = getTableSize(interval);
+        int index = getEntryCount(interval);
         String table = getTableName(interval);
 
         // Update the database with the screen wakes in the current hour. If the amount of rows,
@@ -221,9 +310,10 @@ public class ScreenCountDatabase {
     }
 
     /**
+     * Given a TimeInterval, returns the table name corresponding to it.
      *
-     * @param interval
-     * @return
+     * @param interval - The TimeInterval to get the table name for.
+     * @return - A string of the table name in the database.
      */
     private String getTableName(TimeInterval interval) {
         if(interval == TimeInterval.Hour)
@@ -239,11 +329,16 @@ public class ScreenCountDatabase {
     }
 
     /**
+     * Gets the amount of relevant entries for the TimeInterval. For example if there are 7 weeks
+     * written so far to the database then 7 is returned when TimeInterval.Week is given. However,
+     * for a table like the hour table, it does not return 24, the usual size, but the current hours
+     * passed in the current day. Just a wrapper around getting hourSize, weekSize, etc, based on
+     * the TimeInterval.
      *
-     * @param interval
-     * @return
+     * @param interval - The TimeInterval to get the entry counts for.
+     * @return - The amount of relevant entries for that TimeInterval.
      */
-    private int getTableSize(TimeInterval interval) {
+    private int getEntryCount(TimeInterval interval) {
         if(interval == TimeInterval.Hour)
             return hourSize;
         else if(interval == TimeInterval.Day)
@@ -257,11 +352,13 @@ public class ScreenCountDatabase {
     }
 
     /**
+     * Gets the table size for the provided table name by querying all rows and counting how many
+     * matched.
      *
-     * @param tableName
-     * @return
+     * @param tableName - The table to get the size of.
+     * @return - The size of the table.
      */
-    private int getTableSize(String tableName) {
+    private int queryTableSize(String tableName) {
         Cursor cursor = database.query(tableName, columns, null, null, null, null, null);
         int count = cursor.getCount();
         cursor.close();
@@ -270,9 +367,10 @@ public class ScreenCountDatabase {
     }
 
     /**
+     * Returns the conversion factor between a TimeInterval and it's next smallest unit.
      *
-     * @param interval
-     * @return
+     * @param interval - The TimeInterval to convert.
+     * @return - The conversion answer between the TimeInterval and the next smallest TimeInterval.
      */
     private int convertSingleton(TimeInterval interval) {
         if(interval == TimeInterval.Day)
