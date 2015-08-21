@@ -3,9 +3,8 @@ package com.grioni.app.screenwakecounter;
 import android.app.Activity;
 import android.app.Fragment;
 import android.os.Bundle;
-import android.os.Environment;
 import android.support.v7.app.ActionBar;
-import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AppCompatActivity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -15,12 +14,6 @@ import android.view.ViewGroup;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * @author - Matias Grioni
@@ -52,24 +45,19 @@ public class GraphDetailFragment extends Fragment {
         public void onCardDeleted(int position, TimeCard card);
     }
 
+    private TimeCardsManager cardsManager;
+    private Exporter exporter;
+
     private OnCardDeletedListener cardDeletedListener;
 
-    private TimeCardsManager cardsManager;
-
     private ActionBar actionBar;
-
     private GraphView graph;
-    private TextView indexHeader;
-    private ListView dataList;
-
-    private GraphDetailAdapter graphDetailAdapter;
+    private IndexedAdapter<Integer> graphDetailAdapter;
     private TimeCard card;
     private String axis;
 
     // The position in the TimeCardsManager list of the TimeCard to be detailed.
     private int position;
-    private List<Integer> points;
-    private int count;
 
     /**
      * Instantiates a new instance of this fragment type, using data from the
@@ -106,7 +94,13 @@ public class GraphDetailFragment extends Fragment {
     public void onActivityCreated(Bundle bundle) {
         super.onActivityCreated(bundle);
 
-        actionBar = ((ActionBarActivity) getActivity()).getSupportActionBar();
+        try {
+            actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
+        } catch (ClassCastException ex) {
+            throw new ClassCastException(getActivity().toString() + " must " +
+                " extend AppCompatActivity");
+        }
+
         actionBar.setTitle(getGraphTitle());
     }
 
@@ -115,8 +109,10 @@ public class GraphDetailFragment extends Fragment {
         super.onCreate(savedInstanceState);
 
         cardsManager = TimeCardsManager.getInstance(getActivity());
+        exporter = new Exporter("screenwake/data");
 
-        // Setup the displayed values from the provided TimeCard.
+        // Get the TimeCard given the position and the TimeCard should have
+        // already been queried and up to date.
         Bundle arguments = getArguments();
         position = arguments.getInt("position");
         card = cardsManager.getCard(position);
@@ -135,9 +131,6 @@ public class GraphDetailFragment extends Fragment {
         } else {
             axis = card.interval.name();
         }
-
-        points = TimeCardUtils.getPoints(card);
-        count = TimeCardUtils.getCount(card);
     }
 
     @Override
@@ -149,18 +142,18 @@ public class GraphDetailFragment extends Fragment {
 
         graph = (GraphView) detailView.findViewById(R.id.fragment_details_graph);
         graph.setAxis(axis);
-        graph.setData(points);
+        graph.setData(card.cache.points);
 
-        indexHeader = (TextView) detailView.findViewById(R.id.column_index_header);
+        TextView indexHeader = (TextView) detailView.findViewById(R.id.column_index_header);
         indexHeader.setText(axis);
 
         // Create the double columned list adapter to display the index inline
         // with the data point.
-        dataList = (ListView) detailView.findViewById(R.id.graph_points);
-        dataList.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE_MODAL);
-        graphDetailAdapter = new GraphDetailAdapter(getActivity(),
-                R.layout.row_graph_detail, points);
-        dataList.setAdapter(graphDetailAdapter);
+        ListView pointsView = (ListView) detailView.findViewById(R.id.graph_points);
+        pointsView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE_MODAL);
+        graphDetailAdapter = new IndexedAdapter<Integer>(getActivity(),
+                R.layout.row_graph_detail, card.cache.points);
+        pointsView.setAdapter(graphDetailAdapter);
 
         return detailView;
     }
@@ -168,7 +161,7 @@ public class GraphDetailFragment extends Fragment {
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
-        menu.clear();
+        // menu.clear();
         inflater.inflate(R.menu.graph_details, menu);
     }
 
@@ -176,11 +169,12 @@ public class GraphDetailFragment extends Fragment {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch(item.getItemId()) {
             case R.id.menu_save:
-                String toastMsg = "The file could not be saved";
+                String toastMsg = "Unable to export file";
 
-                if(isExternalStorageWritable()) {
-                    File writtenFile = writeToFile();
-                    toastMsg = writtenFile.getPath() + " saved";
+                if (exporter.isValid()) {
+                    String filename = getFileName();
+                    if (exporter.write(filename, valuesToCSV().getBytes()))
+                        toastMsg = "Export file written to " + filename;
                 }
 
                 Toast.makeText(getActivity(), toastMsg, Toast.LENGTH_SHORT).show();
@@ -201,59 +195,14 @@ public class GraphDetailFragment extends Fragment {
      */
     public void update() {
         this.card = cardsManager.getCard(position);
-        this.points = this.card.cache.points;
-        this.count = this.card.cache.count;
 
-        graphDetailAdapter.setData(points);
-        graph.setData(points);
+        graphDetailAdapter.setData(card.cache.points);
+        graph.setData(card.cache.points);
 
         // Redraw the graph after updating its data
         graph.postInvalidate();
 
         actionBar.setTitle(getGraphTitle());
-    }
-
-    /**
-     * The position of the TimeCard this Fragment is detailing in the global
-     * list of TimeCards.
-     *
-     * @return - The position of the TimeCard of this Fragment.
-     */
-    public int getPosition() {
-        return position;
-    }
-
-    /**
-     * Writes the data points of the TimeCard in this Fragment to an appropriately
-     * named data file, in the screewake/data folder of the sd card.
-     *
-     * @return - The File object of the written log file.
-     */
-    private File writeToFile() {
-        // Get the parent directory to store the log files, and check if it exists. If not, make
-        // the path.
-        File parent = new File(Environment.getExternalStorageDirectory(), "screenwake/data");
-        if(!parent.exists())
-            parent.mkdirs();
-
-        String filename = card.interval.name() + card.backCount + ".csv";
-        File file = new File(parent, filename);
-
-        int index = 0;
-        while(file.exists()) {
-            filename = card.interval.name() + card.backCount + "(" + (++index) + ")" + ".csv";
-            file = new File(parent, filename);
-        }
-
-        try {
-            FileOutputStream outputStream = new FileOutputStream(file);
-            outputStream.write(valuesToCSV().getBytes());
-            outputStream.close();
-        } catch(IOException ex) {
-            ex.printStackTrace();
-        }
-
-        return file;
     }
 
     /**
@@ -265,22 +214,10 @@ public class GraphDetailFragment extends Fragment {
     private String valuesToCSV() {
         String fileBuffer = axis + "\t" + "Views";
 
-        for(int i = 0; i < points.size(); i++)
-            fileBuffer += (i + 1) + "\t" + points.get(i) + "\n";
+        for(int i = 0; i < card.cache.points.size(); i++)
+            fileBuffer += (i + 1) + "\t" + card.cache.points.get(i) + "\n";
 
         return fileBuffer;
-    }
-
-    /**
-     * Checks if the sd card is writable.
-     *
-     * @return - True if sd card is writable and False otherwise.
-     */
-    private boolean isExternalStorageWritable() {
-        String state = Environment.getExternalStorageState();
-        if(Environment.MEDIA_MOUNTED.equals(state))
-            return true;
-        return false;
     }
 
     /**
@@ -292,13 +229,35 @@ public class GraphDetailFragment extends Fragment {
      * @return - The ActionBar title for this Fragment given its TimeCard.
      */
     private String getGraphTitle() {
-        String title = "";
+        String title;
         if(card.backCount > 1)
             title = "Last " + card.backCount + " " + card.interval.name().toLowerCase() + "s";
         else
             title = "Last " + card.interval.name().toLowerCase();
-        title += ": " + count;
+        title += ": " + card.cache.count;
 
         return title;
+    }
+
+    /**
+     * Gets the appropriate filename for this GraphDetailFragment to export. Accounts for the fact
+     * that there can be a file already with the desired name and includes a counter.
+     *
+     * If the Exporter object is not valid then the duplicate file scenario is not considered.
+     *
+     * @return - The next filename to be exported.
+     */
+    private String getFileName() {
+        String next = card.interval.name() + card.backCount + ".csv";
+
+        if (exporter.isValid()) {
+            int index = 1;
+            while (exporter.exists(next)) {
+                next = card.interval.name() + card.backCount + "(" + index + ").csv";
+                index++;
+            }
+        }
+
+        return next;
     }
 }

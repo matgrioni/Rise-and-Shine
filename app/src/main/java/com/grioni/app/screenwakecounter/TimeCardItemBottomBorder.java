@@ -7,16 +7,19 @@ import android.support.v7.widget.RecyclerView;
 import android.view.View;
 
 /**
- * Created by Matias Grioni on 1/25/15.
+ * @author - Matias Grioni
+ * @created - 1/25/15.
+ *
+ *
  */
-public class CardItemDecorator extends RecyclerView.ItemDecoration {
+public class TimeCardItemBottomBorder extends RecyclerView.ItemDecoration {
     private Drawable divider;
 
     /**
      *
      * @param context
      */
-    public CardItemDecorator(Context context) {
+    public TimeCardItemBottomBorder(Context context) {
         divider = context.getResources().getDrawable(R.drawable.card_divider);
     }
 
@@ -27,9 +30,13 @@ public class CardItemDecorator extends RecyclerView.ItemDecoration {
      * @param state
      */
     public void onDraw(Canvas canvas, RecyclerView parent, RecyclerView.State state) {
+        // Get the left and right edge of the non-padded view so that the
+        // divider ends before the screen edges.
         int left = parent.getPaddingLeft();
         int right = parent.getWidth() - parent.getPaddingRight();
 
+        // For each child (entry in the RecyclerView) draw the divider at the
+        // bottom of the view.
         int childCount = parent.getChildCount();
         for(int i = 0; i < childCount; i++) {
             View child = parent.getChildAt(i);

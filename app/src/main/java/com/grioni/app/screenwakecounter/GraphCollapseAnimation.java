@@ -7,22 +7,29 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 
 /**
- * Created by Matias Grioni on 1/13/15.
+ * @author - Matias Grioni
+ * @created - 1/13/15
+ *
+ * The animation to collapse and expand the TimeCard.
  */
-public class GraphAnimation extends Animation {
+public class GraphCollapseAnimation extends Animation {
     private boolean alreadyEnded;
 
     private View animatedView;
     private RelativeLayout.LayoutParams layoutParams;
+
+    // The margin that the view starts and the margin it should end
+    // at when the animation finishes.
     private int marginStart;
     private int marginEnd;
 
     /**
+     * Create the animation to collapse and expand the TimeCard.
      *
-     * @param view
-     * @param duration
+     * @param view - The view to animate.
+     * @param duration - The duration of the animation.
      */
-    public GraphAnimation(View view, int duration) {
+    public GraphCollapseAnimation(View view, int duration) {
         setDuration(duration);
 
         animatedView = view;

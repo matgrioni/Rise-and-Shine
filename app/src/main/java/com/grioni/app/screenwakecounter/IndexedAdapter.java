@@ -13,9 +13,13 @@ import java.util.Calendar;
 import java.util.List;
 
 /**
- * Created by Matias Grioni on 12/25/14.
+ * @author - Matias Grioni
+ * @created - 12/25/14
+ *
+ * An adapter for a double columned ListView. The left column is the index of
+ * the item in the provided list to adapt. The right column is the item.
  */
-public class GraphDetailAdapter extends ArrayAdapter<Integer> {
+public class IndexedAdapter extends ArrayAdapter<Integer> {
     private LayoutInflater inflater;
     private List<Integer> values;
 
@@ -26,7 +30,7 @@ public class GraphDetailAdapter extends ArrayAdapter<Integer> {
      * @param context
      * @param values
      */
-    public GraphDetailAdapter(Context context, int textViewResourceId, List<Integer> values) {
+    public IndexedAdapter(Context context, int textViewResourceId, List<Integer> values) {
         super(context, textViewResourceId, values);
 
         inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
@@ -62,35 +66,4 @@ public class GraphDetailAdapter extends ArrayAdapter<Integer> {
         addAll(values);
         notifyDataSetChanged();
     }
-
-    /*
-    private void setIndex(TimeCard card, TextView view, int position) {
-        Calendar c = Calendar.getInstance();
-        if(card.interval == TimeInterval.Hour) {
-            int hour = c.get(Calendar.HOUR_OF_DAY);
-            int minute = c.get(Calendar.MINUTE);
-
-            // Subtract the time elapsed of the current hour, if it's less than 0, that means the
-            // hour needs to be adjusted to be one less, while the minutes are now on the opposite
-            // side of the 60 if that makes any sense.
-            minute -= minutesElapsed;
-            if(minute < 0) {
-                hour--;
-                minute = 60 + minute;
-            }
-
-            view.setText(hour - (values.size() - 1 - position) + ":" + minute);
-        } else {
-            if(card.backCount == 1) {
-                card.backCount = convertSingleton(card.interval);
-
-                if(card.interval == TimeInterval.Day) {
-                    card.interval = TimeInterval.Hour;
-                } else if(card.interval != TimeInterval.Hour) {
-                    card.interval = TimeInterval.Day;
-                }
-            }
-
-        }
-    }*/
 }
