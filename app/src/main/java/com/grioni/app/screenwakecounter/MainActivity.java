@@ -122,8 +122,7 @@ public class MainActivity extends AppCompatActivity implements
         timeCardsManager = TimeCardsManager.getInstance(this);
         timeCardsManager.open();
 
-        countDatabase = ScreenCountDatabase.getInstance(this);
-        countDatabase.open();
+        countDatabase = ((InstanceApplication) getApplication()).getCountDatabase();
 
         TimeCardUtils.init(this);
 

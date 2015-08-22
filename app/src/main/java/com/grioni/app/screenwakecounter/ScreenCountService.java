@@ -57,7 +57,7 @@ public class ScreenCountService extends Service {
     public void onCreate() {
         super.onCreate();
 
-        countDatabase = ScreenCountDatabase.getInstance(getBaseContext());
+        countDatabase = ((InstanceApplication) getApplication()).getCountDatabase();
 
         // When the service is first created check for any existing preferences for the notification
         // counts. If this is the first time the app is run, none will exist. However, if not and
@@ -122,9 +122,6 @@ public class ScreenCountService extends Service {
     public void onDestroy() {
         if(wakeReceiver != null)
             unregisterReceiver(wakeReceiver);
-
-        // Count database is separate from lifecycle of
-        countDatabase.close();
     }
 
     /**

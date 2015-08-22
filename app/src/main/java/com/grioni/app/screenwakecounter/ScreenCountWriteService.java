@@ -23,9 +23,7 @@ public class ScreenCountWriteService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-
-        countDatabase = ScreenCountDatabase.getInstance(getBaseContext());
-        countDatabase.open();
+        countDatabase = ((InstanceApplication) getApplication()).getCountDatabase();
     }
 
     @Override
