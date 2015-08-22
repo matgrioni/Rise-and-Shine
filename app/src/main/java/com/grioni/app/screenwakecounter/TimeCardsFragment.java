@@ -54,12 +54,19 @@ public class TimeCardsFragment extends Fragment
         }
     };
 
+    private FragmentManager.OnBackStackChangedListener backStackChanged = new FragmentManager.OnBackStackChangedListener() {
+        @Override
+        public void onBackStackChanged() {
+            // If the backstack changed and the GraphDetailsFragment was visible then it no longer is.
+            if(graphDetails != null)
+                graphDetails = null;
+        }
+    };
+
     private ActionBar actionBar;
-    private RecyclerView cardsRecycler;
     private TimeCardAdapter cardsAdapter;
 
     private GraphDetailFragment graphDetails;
-
     private FloatingActionButton fab;
     private Animation fabIn;
     private Animation fabOut;
@@ -90,6 +97,7 @@ public class TimeCardsFragment extends Fragment
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
+        getChildFragmentManager().addOnBackStackChangedListener(backStackChanged);
 
         timeCardsManager = TimeCardsManager.getInstance(getActivity());
 
@@ -106,7 +114,7 @@ public class TimeCardsFragment extends Fragment
 
             SharedPreferences.Editor editor = sharedPreferences.edit();
             editor.putBoolean(getString(R.string.cards_init), true);
-            editor.commit();
+            editor.apply();
         }
     }
 
@@ -116,7 +124,7 @@ public class TimeCardsFragment extends Fragment
 
         View timeCardsView = inflater.inflate(R.layout.fragment_time_cards, container, false);
 
-        cardsRecycler = (RecyclerView) timeCardsView.findViewById(R.id.time_cards_recycler);
+        RecyclerView cardsRecycler = (RecyclerView) timeCardsView.findViewById(R.id.time_cards_recycler);
         cardsRecycler.addItemDecoration(new TimeCardItemBottomBorder(getActivity()));
         cardsRecycler.setLayoutManager(new LinearLayoutManager(getActivity()));
         cardsRecycler.setItemAnimator(new DefaultItemAnimator());
