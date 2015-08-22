@@ -44,11 +44,6 @@ public class ScreenCountWriteService extends Service {
         return binder;
     }
 
-    @Override
-    public void onDestroy() {
-        countDatabase.close();
-    }
-
     /**
      *
      * @param writeListener
