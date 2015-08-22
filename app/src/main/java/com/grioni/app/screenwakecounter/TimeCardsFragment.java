@@ -12,6 +12,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.helper.ItemTouchHelper;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -60,6 +61,21 @@ public class TimeCardsFragment extends Fragment
             // If the backstack changed and the GraphDetailsFragment was visible then it no longer is.
             if(graphDetails != null)
                 graphDetails = null;
+        }
+    };
+
+    ItemTouchHelper.SimpleCallback swipeListener =
+            new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.RIGHT |  ItemTouchHelper.LEFT) {
+        @Override
+        public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder viewHolder2) {
+            return false;
+        }
+
+        @Override
+        public void onSwiped(RecyclerView.ViewHolder viewHolder, int i) {
+            int position = viewHolder.getAdapterPosition();
+            timeCardsManager.remove(position);
+            cardsAdapter.deleteCard(position);
         }
     };
 
@@ -128,6 +144,9 @@ public class TimeCardsFragment extends Fragment
         cardsRecycler.addItemDecoration(new TimeCardItemBottomBorder(getActivity()));
         cardsRecycler.setLayoutManager(new LinearLayoutManager(getActivity()));
         cardsRecycler.setItemAnimator(new DefaultItemAnimator());
+
+        ItemTouchHelper touchHelper = new ItemTouchHelper(swipeListener);
+        touchHelper.attachToRecyclerView(cardsRecycler);
 
         cardsAdapter = new TimeCardAdapter(getActivity(),
                 timeCardsManager.getCards(), cardEventListener);
