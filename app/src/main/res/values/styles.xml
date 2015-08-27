@@ -3,6 +3,7 @@
     <!-- Base application theme. -->
     <style name="AppTheme.Base" parent="Theme.AppCompat.Light.NoActionBar">
         <!-- Customize your theme here. -->
+        <item name="android:windowActivityTransitions">true</item>
         <item name="android:windowBackground">@color/background</item>
         <item name="android:windowNoTitle">true</item>
         <item name="windowActionBar">false</item>

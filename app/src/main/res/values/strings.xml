@@ -37,4 +37,6 @@
     <string name="pref_notification_counts">Notification Counter</string>
     <string name="pref_notification_counts_summary">The wake counts to display in the notification</string>
 
+    <string name="time_card_expand">time_card_expand</string>
+
 </resources>

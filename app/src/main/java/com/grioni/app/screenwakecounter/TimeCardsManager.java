@@ -21,6 +21,7 @@ import java.util.List;
  */
 public class TimeCardsManager {
     private static TimeCardsManager instance;
+    private static ScreenCountDatabase countDatabase;
     private static List<TimeCard> cards;
 
     private SQLiteDatabase database;
@@ -41,6 +42,7 @@ public class TimeCardsManager {
         // cards for it too.
         if(instance == null) {
             instance = new TimeCardsManager(context);
+            countDatabase = ((InstanceApplication) context.getApplicationContext()).getCountDatabase();
             cards = new ArrayList<TimeCard>();
         }
 
@@ -174,8 +176,8 @@ public class TimeCardsManager {
     public TimeCard query(int position) {
         TimeCard card = cards.get(position);
 
-        int count = TimeCardUtils.getCount(card);
-        List<Integer> points = TimeCardUtils.getPoints(card);
+        int count = countDatabase.getCount(card.interval, card.backCount);
+        List<Integer> points = countDatabase.getEntries(card.interval, card.backCount);
         card.cache.count = count;
         card.cache.points = points;
 
