@@ -30,7 +30,8 @@
             android:layout_marginBottom="@dimen/graph_margin_bottom"
             graphview:textSize="@dimen/graph_text_size"
             graphview:lineColor="@color/graph_line_color"
-            graphview:shadeColor="@color/graph_shade_color"/>
+            graphview:shadeColor="@color/graph_shade_color"
+            android:transitionName="@string/time_card_expand"/>
     </RelativeLayout>
 
     <ImageView

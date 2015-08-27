@@ -124,8 +124,6 @@ public class MainActivity extends AppCompatActivity implements
 
         countDatabase = ((InstanceApplication) getApplication()).getCountDatabase();
 
-        TimeCardUtils.init(this);
-
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         if(toolbar != null)
             setSupportActionBar(toolbar);
