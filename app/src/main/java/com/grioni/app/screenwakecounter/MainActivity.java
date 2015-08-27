@@ -50,7 +50,8 @@ public class MainActivity extends AppCompatActivity implements
             // foreground service. This will update the foreground service notification.
             countService.updateNotif();
             updateInfo(0);
-            timeCards.reload();
+            timeCardsManager.queryAll();
+            timeCards.update();
         }
     };
 
@@ -121,6 +122,7 @@ public class MainActivity extends AppCompatActivity implements
         // Create the TimeCardsManger singleton instance and load the cards.
         timeCardsManager = TimeCardsManager.getInstance(this);
         timeCardsManager.open();
+        timeCardsManager.queryAll();
 
         countDatabase = ((InstanceApplication) getApplication()).getCountDatabase();
 

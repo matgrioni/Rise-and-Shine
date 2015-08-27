@@ -151,7 +151,7 @@ public class TimeCardsFragment extends Fragment
                 timeCardsManager.getCards(), cardEventListener);
         cardsRecycler.setAdapter(cardsAdapter);
 
-        reload();
+        update();
 
         fab = (FloatingActionButton) timeCardsView.findViewById(R.id.fab_add_time_card);
         fab.setOnClickListener(onAddCard);
@@ -206,20 +206,13 @@ public class TimeCardsFragment extends Fragment
     }
 
     /**
-     *
+     * Updates the card adapter with the cards from the TimeCardsManager. Also updates the
+     * GraphDetailFragment if any is visible.
      */
     public void update() {
         cardsAdapter.update(timeCardsManager.getCards());
 
         if(graphDetails != null)
             graphDetails.update();
-    }
-
-    /**
-     *
-     */
-    public void reload() {
-        timeCardsManager.queryAll();
-        update();
     }
 }
