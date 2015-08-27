@@ -189,7 +189,7 @@ public class MainActivity extends AppCompatActivity implements
             settings = null;
             getFragmentManager().popBackStack();
         } else if(timeCards.getChildFragmentManager().getBackStackEntryCount() > 0) {
-            timeCards.getChildFragmentManager().popBackStack();
+            timeCards.removeChildFragment();
             getSupportActionBar().setTitle("Rise and Shine");
             getSupportActionBar().setDisplayHomeAsUpEnabled(false);
         } else {

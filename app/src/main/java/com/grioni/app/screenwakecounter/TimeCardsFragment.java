@@ -54,15 +54,6 @@ public class TimeCardsFragment extends Fragment
         }
     };
 
-    private FragmentManager.OnBackStackChangedListener backStackChanged = new FragmentManager.OnBackStackChangedListener() {
-        @Override
-        public void onBackStackChanged() {
-            // If the backstack changed and the GraphDetailsFragment was visible then it no longer is.
-            if(graphDetails != null)
-                graphDetails = null;
-        }
-    };
-
     ItemTouchHelper.SimpleCallback swipeListener =
             new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.RIGHT |  ItemTouchHelper.LEFT) {
         @Override
@@ -112,7 +103,6 @@ public class TimeCardsFragment extends Fragment
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
-        getChildFragmentManager().addOnBackStackChangedListener(backStackChanged);
 
         timeCardsManager = TimeCardsManager.getInstance(getActivity());
 
@@ -214,5 +204,15 @@ public class TimeCardsFragment extends Fragment
 
         if(graphDetails != null)
             graphDetails.update();
+    }
+
+    /**
+     * Removes the GraphDetailFragment child if it's currently visible.
+     */
+    public void removeChildFragment() {
+        if(graphDetails != null) {
+            getChildFragmentManager().popBackStack();
+            graphDetails = null;
+        }
     }
 }

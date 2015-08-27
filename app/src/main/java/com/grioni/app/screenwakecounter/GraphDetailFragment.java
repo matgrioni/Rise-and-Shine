@@ -194,7 +194,7 @@ public class GraphDetailFragment extends Fragment {
      * Updates the data this Fragment displays from the TimeCardManager.
      */
     public void update() {
-        this.card = cardsManager.getCard(position);
+        this.card = cardsManager.query(position);
 
         graphDetailAdapter.setData(card.cache.points);
         graph.setData(card.cache.points);
