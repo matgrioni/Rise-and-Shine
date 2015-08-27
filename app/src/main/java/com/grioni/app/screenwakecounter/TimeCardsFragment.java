@@ -207,7 +207,7 @@ public class TimeCardsFragment extends Fragment
     }
 
     /**
-     * Removes the GraphDetailFragment child if it's currently visible.
+     * Removes the GraphDetailFragment child if it's currently visible. If it's not nothing happens.
      */
     public void removeChildFragment() {
         if(graphDetails != null) {
