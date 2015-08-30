@@ -11,6 +11,7 @@ import android.app.Application;
  */
 public class InstanceApplication extends Application {
     protected ScreenCountDatabase countDatabase;
+    protected TimeCardsManager cardsManager;
 
     @Override
     public void onCreate() {
@@ -20,6 +21,12 @@ public class InstanceApplication extends Application {
         // application life.
         countDatabase = ScreenCountDatabase.getInstance(getApplicationContext());
         countDatabase.open();
+
+        // Same as above. Android kernel will handle the closing at the end of the application life.
+        // Doesn't really matter if it's open, because there is only one instance per application.
+        // So it wouldn't hog resources to not close it when appropriate.
+        cardsManager = TimeCardsManager.getInstance(getApplicationContext());
+        cardsManager.open();
     }
 
     /**
@@ -29,5 +36,14 @@ public class InstanceApplication extends Application {
      */
     public ScreenCountDatabase getCountDatabase() {
         return this.countDatabase;
+    }
+
+    /**
+     * Provides the TimeCardsManager instance for this application.
+     *
+     * @return - The TimeCardsManager instance for this application.
+     */
+    public TimeCardsManager getCardsManager() {
+        return this.cardsManager;
     }
 }

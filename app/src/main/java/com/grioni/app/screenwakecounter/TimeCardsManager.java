@@ -53,7 +53,7 @@ public class TimeCardsManager {
      * Constructor.
      * @param context - An application context to create the TimeCardsManager object.
      */
-    public TimeCardsManager(Context context) {
+    private TimeCardsManager(Context context) {
         tcHelper = new TimeCardHelper(context);
     }
 

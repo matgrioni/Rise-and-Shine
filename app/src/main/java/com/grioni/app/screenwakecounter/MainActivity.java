@@ -36,7 +36,7 @@ public class MainActivity extends AppCompatActivity implements
         @Override
         public void onScreenWake() {
             updateInfo(ScreenCountService.getHourCount());
-            timeCardsManager.incrementCards();
+            cardsManager.incrementCards();
             timeCards.update();
         }
     };
@@ -50,7 +50,7 @@ public class MainActivity extends AppCompatActivity implements
             // foreground service. This will update the foreground service notification.
             countService.updateNotif();
             updateInfo(0);
-            timeCardsManager.queryAll();
+            cardsManager.queryAll();
             timeCards.update();
         }
     };
@@ -96,8 +96,7 @@ public class MainActivity extends AppCompatActivity implements
         }
     };
 
-    private TimeCardsManager timeCardsManager;
-    private ScreenCountDatabase countDatabase;
+    private TimeCardsManager cardsManager;
 
     private TextView hourCount;
     private TextView countdown;
@@ -119,12 +118,7 @@ public class MainActivity extends AppCompatActivity implements
         Intent writeIntent = new Intent(MainActivity.this, ScreenCountWriteService.class);
         bindService(writeIntent, writeConnection, Context.BIND_AUTO_CREATE);
 
-        // Create the TimeCardsManger singleton instance and load the cards.
-        timeCardsManager = TimeCardsManager.getInstance(this);
-        timeCardsManager.open();
-        timeCardsManager.queryAll();
-
-        countDatabase = ((InstanceApplication) getApplication()).getCountDatabase();
+        cardsManager = ((InstanceApplication) getApplication()).getCardsManager();
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         if(toolbar != null)
@@ -200,8 +194,6 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     public void onDestroy() {
         super.onDestroy();
-
-        timeCardsManager.close();
 
         if(countBound) {
             unbindService(countConnection);

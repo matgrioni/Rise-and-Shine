@@ -41,7 +41,7 @@ public class TimeCardsFragment extends Fragment
 
         @Override
         public void onCardStateChanged(int position) {
-            timeCardsManager.changeCardState(position);
+            cardsManager.changeCardState(position);
         }
     };
 
@@ -64,7 +64,7 @@ public class TimeCardsFragment extends Fragment
         @Override
         public void onSwiped(RecyclerView.ViewHolder viewHolder, int i) {
             int position = viewHolder.getAdapterPosition();
-            timeCardsManager.remove(position);
+            cardsManager.remove(position);
             cardsAdapter.deleteCard(position);
         }
     };
@@ -77,7 +77,7 @@ public class TimeCardsFragment extends Fragment
     private Animation fabIn;
     private Animation fabOut;
 
-    private TimeCardsManager timeCardsManager;
+    private TimeCardsManager cardsManager;
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
@@ -104,7 +104,7 @@ public class TimeCardsFragment extends Fragment
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
 
-        timeCardsManager = TimeCardsManager.getInstance(getActivity());
+        cardsManager = ((InstanceApplication) getActivity().getApplicationContext()).getCardsManager();
 
         SharedPreferences sharedPreferences = getActivity()
                 .getSharedPreferences(getString(R.string.shared_preference_file), Context.MODE_PRIVATE);
@@ -113,14 +113,17 @@ public class TimeCardsFragment extends Fragment
         // If this is the first time the program is run, then init will be false, the default value,
         // since no value for cards_init has been written yet. Then the 3 default cards will be added.
         if(!init) {
-            timeCardsManager.addCard(new TimeCard(TimeInterval.Day, 1));
-            timeCardsManager.addCard(new TimeCard(TimeInterval.Week, 1));
-            timeCardsManager.addCard(new TimeCard(TimeInterval.Month, 1));
+            cardsManager.addCard(new TimeCard(TimeInterval.Day, 1));
+            cardsManager.addCard(new TimeCard(TimeInterval.Week, 1));
+            cardsManager.addCard(new TimeCard(TimeInterval.Month, 1));
 
             SharedPreferences.Editor editor = sharedPreferences.edit();
             editor.putBoolean(getString(R.string.cards_init), true);
             editor.apply();
         }
+
+        // Create the TimeCardsManger singleton instance and load the cards.
+        cardsManager.queryAll();
     }
 
     @Override
@@ -138,7 +141,7 @@ public class TimeCardsFragment extends Fragment
         touchHelper.attachToRecyclerView(cardsRecycler);
 
         cardsAdapter = new TimeCardAdapter(getActivity(),
-                timeCardsManager.getCards(), cardEventListener);
+                cardsManager.getCards(), cardEventListener);
         cardsRecycler.setAdapter(cardsAdapter);
 
         update();
@@ -172,7 +175,7 @@ public class TimeCardsFragment extends Fragment
         // Since the card that was added is unqueried/cache is empty, we have
         // to query the card which would be the last card in the list since it
         // was just added.
-        timeCardsManager.queryLast();
+        cardsManager.queryLast();
         cardsAdapter.addCard(card);
     }
 
@@ -200,7 +203,7 @@ public class TimeCardsFragment extends Fragment
      * GraphDetailFragment if any is visible.
      */
     public void update() {
-        cardsAdapter.update(timeCardsManager.getCards());
+        cardsAdapter.update(cardsManager.getCards());
 
         if(graphDetails != null)
             graphDetails.update();
