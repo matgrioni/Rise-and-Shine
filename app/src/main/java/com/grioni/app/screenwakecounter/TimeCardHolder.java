@@ -53,7 +53,6 @@ public class TimeCardHolder extends RecyclerView.ViewHolder {
     };
 
     private TimeCardEventListener cardEventListener;
-    private TimeCardsManager cardsManager;
 
     public TextView count;
     public GraphView graph;
@@ -82,8 +81,6 @@ public class TimeCardHolder extends RecyclerView.ViewHolder {
         popupMenu.inflate(R.menu.card_options);
 
         baseContext = parent.getContext();
-
-        cardsManager = TimeCardsManager.getInstance(baseContext);
     }
 
     /**
