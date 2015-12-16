@@ -133,7 +133,7 @@ public class ScreenCountDatabase {
     }
 
     /**
-     * Queries the corresponding TimeInterval and sums the last backCount entries in that table.
+     * Queries the corresponding TimeInterval and sums the last {@code backCount} entries in that table.
      * Result is equivalent to summing the items in the list from getEntries.
      *
      * @param interval - The TimeInterval whose corresponding table to query for the entries.
@@ -196,7 +196,7 @@ public class ScreenCountDatabase {
         Cursor cursor = getEntriesCursor(interval, start);
         cursor.moveToFirst();
 
-        List<Integer> data = new ArrayList<Integer>();
+        List<Integer> data = new ArrayList<>();
         while(!cursor.isAfterLast()) {
             data.add(cursor.getInt(0));
             cursor.moveToNext();
@@ -238,7 +238,7 @@ public class ScreenCountDatabase {
      * an id of start until the end of the table.
      *
      * @param interval - The TimeInterval whose corresponding table to query.
-     * @param start - The id of the first row in the cursor.
+     * @param start - The id of the first row in the cursor. 1 is the first possible value.
      * @return - The cursor object that will transverse rows in the table for the TimeInterval from
      *         the row with an id of start to the last entry.
      */
