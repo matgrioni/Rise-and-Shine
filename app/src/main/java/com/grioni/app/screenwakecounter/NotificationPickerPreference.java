@@ -14,6 +14,8 @@ import android.widget.Spinner;
 import java.util.ArrayList;
 import java.util.List;
 
+import models.TimeInterval;
+
 /**
  * @author - Matias Grioni
  * @created - 5/15/15

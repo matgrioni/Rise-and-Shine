@@ -9,6 +9,9 @@ import android.database.sqlite.SQLiteDatabase;
 import java.util.ArrayList;
 import java.util.List;
 
+import models.TimeCard;
+import models.TimeInterval;
+
 /**
  * @author - Matias Grioni
  * @created - 8/10/15
@@ -21,7 +24,6 @@ import java.util.List;
  */
 public class TimeCardsManager {
     private static TimeCardsManager instance;
-    private static ScreenCountDatabase countDatabase;
     private static List<TimeCard> cards;
 
     private SQLiteDatabase database;
@@ -42,7 +44,6 @@ public class TimeCardsManager {
         // cards for it too.
         if(instance == null) {
             instance = new TimeCardsManager(context);
-            countDatabase = ((InstanceApplication) context.getApplicationContext()).getCountDatabase();
             cards = new ArrayList<TimeCard>();
         }
 
@@ -112,10 +113,12 @@ public class TimeCardsManager {
      *
      * @param position - The position of the TimeCard to remove.
      */
-    public void remove(int position) {
-        cards.remove(position);
+    public TimeCard remove(int position) {
+        TimeCard card = cards.remove(position);
         database.delete(TimeCardHelper.TABLE_CARDS_NAME,
                 TimeCardHelper.COLUMN_ID + "=" + (position + 1), null);
+
+        return card;
     }
 
     /**
@@ -167,63 +170,6 @@ public class TimeCardsManager {
     }
 
     /**
-     * Queries the ScreenCountDatabase for the total counts and points for the
-     * TimeCard at the given position.
-     *
-     * @param position - The position of the TimeCard in the list.
-     * @return - The TimeCard with the modified cache.
-     */
-    public TimeCard query(int position) {
-        TimeCard card = cards.get(position);
-
-        int count = countDatabase.getCount(card.interval, card.backCount);
-        List<Integer> points = countDatabase.getEntries(card.interval, card.backCount);
-        card.cache.count = count;
-        card.cache.points = points;
-
-        cards.set(position, card);
-
-        return card;
-    }
-
-    /**
-     * Convenience method to query the last TimeCard in the list.
-     *
-     * @return - The last TimeCard with a modified cache.
-     */
-    public TimeCard queryLast() {
-        return this.query(cards.size() - 1);
-    }
-
-    /**
-     * Convenience method for querying all the TimeCards in the list.
-     */
-    public void queryAll() {
-        for(int i = 0; i < cards.size(); i++)
-            this.query(i);
-    }
-
-    /**
-     * Increments the card counters on this
-     */
-    public void incrementCards() {
-        for(int i = 0; i < cards.size(); i++) {
-            TimeCard card = cards.get(i);
-
-            // Increment the total count for the card and also increment the last point of the card.
-            card.cache.count++;
-
-            // Don't need to reassign to card.cache.points since aliasing
-            // occurs. points references the same location as card.cache.points
-            List<Integer> points = card.cache.points;
-            int lastPoint = points.get(points.size() - 1);
-            points.set(points.size() - 1, ++lastPoint);
-
-            this.updateCard(i, card);
-        }
-    }
-
-    /**
      * The list of TimeCards.
      *
      * @return - The list of TimeCards.
@@ -240,6 +186,15 @@ public class TimeCardsManager {
      */
     public TimeCard getCard(int position) {
         return cards.get(position);
+    }
+
+    /**
+     * The amount of cards this manager has.
+     *
+     * @return -The number of TimeCards in this manager.
+     */
+    public int size() {
+        return cards.size();
     }
 
     /**

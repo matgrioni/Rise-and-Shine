@@ -1,7 +1,6 @@
 package com.grioni.app.screenwakecounter;
 
 import android.app.Fragment;
-import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.content.ComponentName;
 import android.content.Context;
@@ -12,19 +11,14 @@ import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.IBinder;
 import android.os.SystemClock;
-import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.View;
-import android.view.animation.Animation;
-import android.view.animation.AnimationUtils;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import java.util.List;
+import models.TimeInterval;
 
 /**
  * Created by Matias Grioni on 12/16/14.
@@ -36,7 +30,6 @@ public class MainActivity extends AppCompatActivity implements
         @Override
         public void onScreenWake() {
             updateInfo(ScreenCountService.getHourCount());
-            cardsManager.incrementCards();
             timeCards.update();
         }
     };
@@ -50,7 +43,6 @@ public class MainActivity extends AppCompatActivity implements
             // foreground service. This will update the foreground service notification.
             countService.updateNotif();
             updateInfo(0);
-            cardsManager.queryAll();
             timeCards.update();
         }
     };

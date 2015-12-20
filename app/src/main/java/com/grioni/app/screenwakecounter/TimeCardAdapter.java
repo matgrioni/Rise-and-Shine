@@ -1,24 +1,18 @@
 package com.grioni.app.screenwakecounter;
 
-import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
-import android.os.CountDownTimer;
-import android.os.SystemClock;
-import android.support.v4.app.Fragment;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.PopupMenu;
-import android.widget.RelativeLayout;
-import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import models.TimeCard;
+import models.TimeCardCache;
 
 /**
  * Created by Matias Grioni on 12/27/14.
@@ -27,12 +21,14 @@ public class TimeCardAdapter extends RecyclerView.Adapter<TimeCardHolder> {
     private TimeCardEventListener cardEventListener;
 
     private List<TimeCard> cards;
+    private Map<TimeCard, TimeCardCache> caches;
     private Context baseContext;
 
-    public TimeCardAdapter(Context context, List<TimeCard> cards,
+    public TimeCardAdapter(Context context, List<TimeCard> cards, Map<TimeCard, TimeCardCache> caches,
                            TimeCardEventListener cardEventListener) {
         baseContext = context;
         this.cards = new ArrayList<TimeCard>(cards);
+        this.caches = new HashMap<>(caches);
         this.cardEventListener = cardEventListener;
     }
 
@@ -59,6 +55,8 @@ public class TimeCardAdapter extends RecyclerView.Adapter<TimeCardHolder> {
      */
     @Override
     public void onBindViewHolder(TimeCardHolder holder, int position) {
+        TimeCard card = cards.get(position);
+        holder.setCache(caches.get(card));
         holder.bindHolder(cards.get(position));
     }
 

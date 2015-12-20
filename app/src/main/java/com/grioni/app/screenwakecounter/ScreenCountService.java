@@ -15,6 +15,8 @@ import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 
+import models.TimeInterval;
+
 /**
  * @author - Matias Grioni
  * @created - 12/16/14
@@ -96,7 +98,7 @@ public class ScreenCountService extends Service {
         Intent alarmIntent = new Intent(getBaseContext(), ScreenCountWriteService.class);
         AlarmManager alarm = (AlarmManager) getSystemService(ALARM_SERVICE);
         alarm.setRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP,
-                SystemClock.elapsedRealtime() + 60 * 60 * 1000, 60 * 60 * 1000,
+                SystemClock.elapsedRealtime() + 30 * 1000, 30 * 1000,
                 PendingIntent.getService(getBaseContext(), 0, alarmIntent, 0));
         lastAlarmTime = SystemClock.elapsedRealtime();
     }

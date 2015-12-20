@@ -19,6 +19,14 @@ import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import models.TimeCard;
+import models.TimeCardCache;
+import models.TimeInterval;
+
 /**
  * Created by Matias Grioni on 1/2/15.
  */
@@ -29,7 +37,8 @@ public class TimeCardsFragment extends Fragment
     private TimeCardEventListener cardEventListener = new TimeCardEventListener() {
         @Override
         public void onCardClicked(int position) {
-            graphDetails = GraphDetailFragment.newInstance(position);
+            TimeCardCache cardCache = cache.get(cardsManager.getCard(position));
+            graphDetails = GraphDetailFragment.newInstance(position, cardCache);
 
             FragmentTransaction transaction = getChildFragmentManager().beginTransaction();
             transaction.add(R.id.fragment_parent, graphDetails, "graphDetails");
@@ -77,7 +86,9 @@ public class TimeCardsFragment extends Fragment
     private Animation fabIn;
     private Animation fabOut;
 
+    private ScreenCountDatabase countDatabase;
     private TimeCardsManager cardsManager;
+    private Map<TimeCard, TimeCardCache> cache;
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
@@ -105,6 +116,7 @@ public class TimeCardsFragment extends Fragment
         setHasOptionsMenu(true);
 
         cardsManager = ((InstanceApplication) getActivity().getApplicationContext()).getCardsManager();
+        countDatabase = ((InstanceApplication) getActivity().getApplicationContext()).getCountDatabase();
 
         SharedPreferences sharedPreferences = getActivity()
                 .getSharedPreferences(getString(R.string.shared_preference_file), Context.MODE_PRIVATE);
@@ -122,8 +134,14 @@ public class TimeCardsFragment extends Fragment
             editor.apply();
         }
 
-        // Create the TimeCardsManger singleton instance and load the cards.
-        cardsManager.queryAll();
+        cache = new HashMap<>();
+        for(int i = 0; i < cardsManager.getCards().size(); i++) {
+            TimeCard cur = cardsManager.getCard(i);
+            List<Integer> counts = countDatabase.getEntries(cur.interval, cur.backCount);
+
+            TimeCardCache cardCache = new TimeCardCache(counts);
+            cache.put(cur, cardCache);
+        }
     }
 
     @Override
@@ -141,7 +159,7 @@ public class TimeCardsFragment extends Fragment
         touchHelper.attachToRecyclerView(cardsRecycler);
 
         cardsAdapter = new TimeCardAdapter(getActivity(),
-                cardsManager.getCards(), cardEventListener);
+                cardsManager.getCards(), cache, cardEventListener);
         cardsRecycler.setAdapter(cardsAdapter);
 
         update();
@@ -172,11 +190,11 @@ public class TimeCardsFragment extends Fragment
     }
 
     public void onCardAdded(TimeCard card) {
-        // Since the card that was added is unqueried/cache is empty, we have
-        // to query the card which would be the last card in the list since it
-        // was just added.
-        cardsManager.queryLast();
         cardsAdapter.addCard(card);
+        List<Integer> counts = countDatabase.getEntries(card.interval, card.backCount);
+
+        TimeCardCache cardCache = new TimeCardCache(counts);
+        cache.put(card, cardCache);
     }
 
     public void onCardDeleted(int position, TimeCard card) {
@@ -203,6 +221,16 @@ public class TimeCardsFragment extends Fragment
      * GraphDetailFragment if any is visible.
      */
     public void update() {
+        for(Map.Entry<TimeCard, TimeCardCache> entry : cache.entrySet()) {
+            TimeCard card = entry.getKey();
+            TimeCardCache cardCache = entry.getValue();
+
+            cardCache.count = countDatabase.getCount(card.interval, card.backCount);
+            cardCache.data = countDatabase.getEntries(card.interval, card.backCount);
+
+            entry.setValue(cardCache);
+        }
+
         cardsAdapter.update(cardsManager.getCards());
 
         if(graphDetails != null)

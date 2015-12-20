@@ -18,6 +18,9 @@ import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.List;
 
+import models.TimeCard;
+import models.TimeInterval;
+
 /**
  * @author - Matias Grioni
  * @created - 1/5/15

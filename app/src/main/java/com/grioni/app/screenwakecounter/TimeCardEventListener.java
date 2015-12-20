@@ -1,5 +1,7 @@
 package com.grioni.app.screenwakecounter;
 
+import models.TimeCard;
+
 /**
  * @author - Matias Grioni
  * @created - 8/12/15
@@ -16,7 +18,7 @@ public interface TimeCardEventListener {
      *
      * @param position - The position of the card in the TimeCards list.
      */
-    public void onCardClicked(int position);
+    void onCardClicked(int position);
 
     /**
      * Callback for when the arrow to change the collapsed state of the card is
@@ -24,5 +26,5 @@ public interface TimeCardEventListener {
      *
      * @param position - The position of the card in the TimeCards list.
      */
-    public void onCardStateChanged(int position);
+    void onCardStateChanged(int position);
 }

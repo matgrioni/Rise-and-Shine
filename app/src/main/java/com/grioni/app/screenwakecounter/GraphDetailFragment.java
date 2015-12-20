@@ -15,6 +15,13 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import models.TimeCard;
+import models.TimeCardCache;
+import models.TimeInterval;
+
 /**
  * @author - Matias Grioni
  * @created - 12/25/14
@@ -42,19 +49,22 @@ public class GraphDetailFragment extends Fragment {
          *                 TimeCardsManager TimeCards list.
          * @param card - The card that was deleted.
          */
-        public void onCardDeleted(int position, TimeCard card);
+        void onCardDeleted(int position, TimeCard card);
     }
 
     private TimeCardsManager cardsManager;
+    private ScreenCountDatabase countDatabase;
     private Exporter exporter;
 
     private OnCardDeletedListener cardDeletedListener;
 
     private ActionBar actionBar;
     private GraphView graph;
-    private IndexedAdapter<Integer> graphDetailAdapter;
-    private TimeCard card;
     private String axis;
+    private IndexedAdapter<Integer> graphDetailAdapter;
+
+    private TimeCard card;
+    private TimeCardCache cache;
 
     // The position in the TimeCardsManager list of the TimeCard to be detailed.
     private int position;
@@ -68,11 +78,12 @@ public class GraphDetailFragment extends Fragment {
      * @return - The new instance of the GraphDetailFragment using the provided
      *         params.
      */
-    public static GraphDetailFragment newInstance(int position) {
+    public static GraphDetailFragment newInstance(int position, TimeCardCache cache) {
         GraphDetailFragment graphDetails = new GraphDetailFragment();
 
         Bundle arguments = new Bundle();
         arguments.putInt("position", position);
+        arguments.putParcelable("cache", cache);
         graphDetails.setArguments(arguments);
 
         return graphDetails;
@@ -109,12 +120,14 @@ public class GraphDetailFragment extends Fragment {
         super.onCreate(savedInstanceState);
 
         cardsManager = TimeCardsManager.getInstance(getActivity());
+        countDatabase = ((InstanceApplication) getActivity().getApplicationContext()).getCountDatabase();
         exporter = new Exporter("screenwake/data");
 
         // Get the TimeCard given the position and the TimeCard should have
         // already been queried and up to date.
         Bundle arguments = getArguments();
         position = arguments.getInt("position");
+        cache = arguments.getParcelable("cache");
         card = cardsManager.getCard(position);
 
         // If this card only goes back one unit, then the axis has to break this TimeUnit into
@@ -142,7 +155,7 @@ public class GraphDetailFragment extends Fragment {
 
         graph = (GraphView) detailView.findViewById(R.id.fragment_details_graph);
         graph.setAxis(axis);
-        graph.setData(card.cache.points);
+        graph.setData(cache.data);
 
         TextView indexHeader = (TextView) detailView.findViewById(R.id.column_index_header);
         indexHeader.setText(axis);
@@ -151,8 +164,8 @@ public class GraphDetailFragment extends Fragment {
         // with the data point.
         ListView pointsView = (ListView) detailView.findViewById(R.id.graph_points);
         pointsView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE_MODAL);
-        graphDetailAdapter = new IndexedAdapter<Integer>(getActivity(),
-                R.layout.row_graph_detail, card.cache.points);
+        graphDetailAdapter = new IndexedAdapter<>(getActivity(),
+                R.layout.row_graph_detail, cache.data);
         pointsView.setAdapter(graphDetailAdapter);
 
         return detailView;
@@ -194,10 +207,10 @@ public class GraphDetailFragment extends Fragment {
      * Updates the data this Fragment displays from the TimeCardManager.
      */
     public void update() {
-        this.card = cardsManager.query(position);
+        cache.data = countDatabase.getEntries(card.interval, card.backCount);
 
-        graphDetailAdapter.setData(card.cache.points);
-        graph.setData(card.cache.points);
+        graphDetailAdapter.setData(cache.data);
+        graph.setData(cache.data);
 
         // Redraw the graph after updating its data
         graph.postInvalidate();
@@ -214,8 +227,8 @@ public class GraphDetailFragment extends Fragment {
     private String valuesToCSV() {
         String fileBuffer = axis + "\t" + "Views\n";
 
-        for(int i = 0; i < card.cache.points.size(); i++)
-            fileBuffer += (i + 1) + "\t" + card.cache.points.get(i) + "\n";
+        for(int i = 0; i < cache.data.size(); i++)
+            fileBuffer += (i + 1) + "\t" + cache.data.get(i) + "\n";
 
         return fileBuffer;
     }
@@ -234,7 +247,7 @@ public class GraphDetailFragment extends Fragment {
             title = "Last " + card.backCount + " " + card.interval.name().toLowerCase() + "s";
         else
             title = "Last " + card.interval.name().toLowerCase();
-        title += ": " + card.cache.count;
+        title += ": " + cache.count;
 
         return title;
     }

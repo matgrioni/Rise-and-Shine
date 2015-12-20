@@ -12,6 +12,12 @@ import android.widget.PopupMenu;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import java.util.List;
+
+import models.TimeCard;
+import models.TimeCardCache;
+import models.TimeInterval;
+
 /**
  * Created by Matias Grioni on 1/15/15.
  */
@@ -54,7 +60,7 @@ public class TimeCardHolder extends RecyclerView.ViewHolder {
 
     private TimeCardEventListener cardEventListener;
 
-    public TextView count;
+    public TextView title;
     public GraphView graph;
 
     public ImageView action;
@@ -64,6 +70,8 @@ public class TimeCardHolder extends RecyclerView.ViewHolder {
 
     private Context baseContext;
 
+    private TimeCardCache cache;
+
     /**
      *
      * @param parent
@@ -71,7 +79,7 @@ public class TimeCardHolder extends RecyclerView.ViewHolder {
     public TimeCardHolder(View parent) {
         super(parent);
 
-        count = (TextView) parent.findViewById(R.id.interval_count);
+        title = (TextView) parent.findViewById(R.id.interval_count);
         graph = (GraphView) parent.findViewById(R.id.graph);
 
         action = (ImageView) parent.findViewById(R.id.card_action);
@@ -81,6 +89,10 @@ public class TimeCardHolder extends RecyclerView.ViewHolder {
         popupMenu.inflate(R.menu.card_options);
 
         baseContext = parent.getContext();
+    }
+
+    public void setCache(TimeCardCache cache) {
+        this.cache = cache;
     }
 
     /**
@@ -112,7 +124,7 @@ public class TimeCardHolder extends RecyclerView.ViewHolder {
             public boolean onMenuItemClick(MenuItem item) {
                 switch(item.getItemId()) {
                     case R.id.card_share:
-                        String shareText = "Screen was turned on " + card.cache.count + " times in the last ";
+                        String shareText = "Screen was turned on " + cache.count + " times in the last ";
                         if(card.backCount == 1)
                             shareText += card.interval.name().toLowerCase();
                         else
@@ -142,7 +154,7 @@ public class TimeCardHolder extends RecyclerView.ViewHolder {
             label += Integer.toString(card.backCount) + " " + card.interval.name() + "s";
         else
             label += card.interval.name();
-        count.setText(label + ": " + card.cache.count);
+        title.setText(label + ": " + cache.count);
 
         String axis = "Hour";
         if (card.backCount == 1) {
@@ -151,7 +163,7 @@ public class TimeCardHolder extends RecyclerView.ViewHolder {
         } else
             axis = card.interval.name();
         graph.setAxis(axis);
-        graph.setData(card.cache.points);
+        graph.setData(cache.data);
 
         if(!card.collapsed) {
             ViewGroup.MarginLayoutParams params =
