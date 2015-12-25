@@ -15,12 +15,10 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import models.TimeCard;
 import models.TimeCardCache;
 import models.TimeInterval;
+import utils.Exporter;
 
 /**
  * @author - Matias Grioni

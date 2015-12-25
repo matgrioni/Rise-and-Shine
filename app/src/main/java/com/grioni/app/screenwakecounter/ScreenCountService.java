@@ -1,7 +1,6 @@
 package com.grioni.app.screenwakecounter;
 
 import android.app.AlarmManager;
-import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
@@ -12,7 +11,6 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.os.SystemClock;
 import android.preference.PreferenceManager;
-import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 
 import models.TimeInterval;
@@ -38,14 +36,10 @@ public class ScreenCountService extends Service {
         }
     }
 
+    private static final int SECONDS_TO_ALARM = 60;
     private static final int NOTIF_ID = 1337;
-    private NotificationCompat.Builder notifBuilder;
-    private NotificationManagerCompat notifManager;
 
-    // The database needed to get the counts for the notification.
-    private ScreenCountDatabase countDatabase;
-    private int backCount;
-    private TimeInterval interval;
+    private NotificationManagerCompat notifManager;
 
     private BroadcastReceiver wakeReceiver;
     private ScreenCountBinder countBinder = new ScreenCountBinder();
@@ -59,20 +53,7 @@ public class ScreenCountService extends Service {
     public void onCreate() {
         super.onCreate();
 
-        countDatabase = ((InstanceApplication) getApplication()).getCountDatabase();
-
-        // When the service is first created check for any existing preferences for the notification
-        // counts. If this is the first time the app is run, none will exist. However, if not and
-        // the app has crashed and is being started again than some value will already exist here.
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
-        String notifDesc = preferences.getString("pref_notification_counts", "1 Hour");
-
-        // Parse the provided into the number and the interval.
-        int split = notifDesc.indexOf(" ");
-        backCount = Integer.parseInt(notifDesc.substring(0, split));
-        interval = TimeInterval.valueOf(notifDesc.substring(split + 1));
-
-        // IntentFilter for the actions of turning on and off the screen.
+        // IntentFilter for the actions of turning the screen on.
         IntentFilter wakeFilter = new IntentFilter();
         wakeFilter.addAction(Intent.ACTION_SCREEN_ON);
 
@@ -81,26 +62,8 @@ public class ScreenCountService extends Service {
 
         notifManager = NotificationManagerCompat.from(getBaseContext());
 
-        // Start the service in the foreground so that it is not destroyed easily, and also provides
-        // a notification for the user to see their screen wakes.
-        Intent notifIntent = new Intent(getBaseContext(), MainActivity.class);
-        PendingIntent pendingIntent  = PendingIntent.getActivity(getBaseContext(), 0, notifIntent, 0);
-
-        notifBuilder = new NotificationCompat.Builder(getBaseContext())
-                .setContentTitle(getNotifLabel() + getNotifCount())
-                .setSmallIcon(R.drawable.ic_notif)
-                .setColor(0x039be5)
-                .setContentIntent(pendingIntent)
-                .setPriority(Notification.PRIORITY_MIN);
-
-        startForeground(NOTIF_ID, notifBuilder.build());
-
-        Intent alarmIntent = new Intent(getBaseContext(), ScreenCountWriteService.class);
-        AlarmManager alarm = (AlarmManager) getSystemService(ALARM_SERVICE);
-        alarm.setRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP,
-                SystemClock.elapsedRealtime() + 30 * 1000, 30 * 1000,
-                PendingIntent.getService(getBaseContext(), 0, alarmIntent, 0));
-        lastAlarmTime = SystemClock.elapsedRealtime();
+        startNotification();
+        setScreenCountWriteAlarm();
     }
 
     @Override
@@ -109,8 +72,7 @@ public class ScreenCountService extends Service {
         if (screenWakeListener != null)
             screenWakeListener.onScreenWake();
 
-        notifBuilder.setContentTitle(getNotifLabel() + getNotifCount());
-        notifManager.notify(NOTIF_ID, notifBuilder.build());
+        ScreenCountNotificationManager.refreshCount();
 
         return START_STICKY;
     }
@@ -138,20 +100,12 @@ public class ScreenCountService extends Service {
 
     /**
      * Get the last time the database was written to. The number returned is in the format of
-     * SystemClock.elapsedRealtime().
+     * SystemClock#elapsedRealtime().
      *
      * @return - The elapsed real time figure of the last write time to the database.
      */
     public static long getLastAlarmTime() {
        return lastAlarmTime;
-    }
-
-    /**
-     * Updates the notification counter with the correct count and label.
-     */
-    public void updateNotif() {
-        notifBuilder.setContentTitle(getNotifLabel() + getNotifCount());
-        notifManager.notify(NOTIF_ID, notifBuilder.build());
     }
 
     /**
@@ -161,6 +115,10 @@ public class ScreenCountService extends Service {
      */
     public static int getHourCount() {
         return screenChangeCount;
+    }
+
+    public void updateNotif() {
+
     }
 
     /**
@@ -173,49 +131,35 @@ public class ScreenCountService extends Service {
     }
 
     /**
-     * Get the label (the part before the colon in the notification) for this Service.
      *
-     * @return - The label for the Notification for this Service.
      */
-    private String getNotifLabel() {
-        String label = "Last ";
-        if(backCount != 1)
-            label += backCount + " " + interval.name() + "s: ";
-        else
-            label += interval.name() + ": ";
+    private void startNotification() {
+        // When the service is first created check for any existing preferences for the notification
+        // counts. If this is the first time the app is run, none will exist. However, if not and
+        // the app has crashed and is being started again than some value will already exist here.
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        String notifDesc = preferences.getString("pref_notification_counts", "1 Hour");
 
-        return label;
+        // Parse the provided into the number and the interval.
+        int split = notifDesc.indexOf(" ");
+        int backCount = Integer.parseInt(notifDesc.substring(0, split));
+        TimeInterval interval = TimeInterval.valueOf(notifDesc.substring(split + 1));
+
+        ScreenCountNotificationManager.setup(getBaseContext(), NOTIF_ID);
+        startForeground(NOTIF_ID, ScreenCountNotificationManager.build());
+
+        ScreenCountNotificationManager.updateInfo(interval, backCount);
     }
 
     /**
-     * Get the amount of screen wakes for the interval and back count specified for this Service.
      *
-     * @return - The amount of screen wakes to display for the notification.
      */
-    private int getNotifCount() {
-        if(backCount == 1 && interval == TimeInterval.Hour)
-            return screenChangeCount;
-
-        return countDatabase.getCount(interval, backCount);
-    }
-
-    /**
-     * Set the back count for the Notification and update the notification after.
-     *
-     * @param backCount  - The new back count for the notification.
-     */
-    public void setNotifBackcount(int backCount) {
-        this.backCount = backCount;
-        updateNotif();
-    }
-
-    /**
-     * Set the TimeInterval for the Notification and update the notification after.
-     *
-     * @param interval - The new TimeInterval for the notification.
-     */
-    public void setNotifInterval(TimeInterval interval) {
-        this.interval = interval;
-        updateNotif();
+    private void setScreenCountWriteAlarm() {
+        Intent alarmIntent = new Intent(getBaseContext(), ScreenCountWriteService.class);
+        AlarmManager alarm = (AlarmManager) getSystemService(ALARM_SERVICE);
+        alarm.setRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP,
+                SystemClock.elapsedRealtime() + SECONDS_TO_ALARM * 1000, SECONDS_TO_ALARM * 1000,
+                PendingIntent.getService(getBaseContext(), 0, alarmIntent, 0));
+        lastAlarmTime = SystemClock.elapsedRealtime();
     }
 }

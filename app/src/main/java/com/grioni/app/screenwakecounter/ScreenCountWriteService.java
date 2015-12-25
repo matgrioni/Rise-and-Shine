@@ -32,6 +32,7 @@ public class ScreenCountWriteService extends Service {
         countDatabase.addHour(hourCount);
 
         ScreenCountService.reset();
+        ScreenCountNotificationManager.refreshCount();
 
         if(writeListener != null)
             writeListener.onWrite();

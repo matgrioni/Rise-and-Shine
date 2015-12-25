@@ -246,8 +246,8 @@ public class MainActivity extends AppCompatActivity implements
             int backcount = Integer.parseInt(preference.substring(0, split));
             TimeInterval interval = TimeInterval.valueOf(preference.substring(split + 1));
 
-            countService.setNotifBackcount(backcount);
-            countService.setNotifInterval(interval);
+            ScreenCountNotificationManager.updateBackcount(backcount);
+            ScreenCountNotificationManager.updateInterval(interval);
         }
     }
 }
