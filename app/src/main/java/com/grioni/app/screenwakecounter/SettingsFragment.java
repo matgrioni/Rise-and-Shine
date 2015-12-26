@@ -6,10 +6,13 @@ import android.os.Bundle;
 import android.preference.PreferenceFragment;
 import android.view.Menu;
 
+import models.TimeInterval;
+
 /**
  * Created by Matias Grioni on 2/18/15.
  */
-public class SettingsFragment extends PreferenceFragment {
+public class SettingsFragment extends PreferenceFragment
+        implements SharedPreferences.OnSharedPreferenceChangeListener {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -21,23 +24,37 @@ public class SettingsFragment extends PreferenceFragment {
     public void onResume() {
         super.onResume();
 
-        Activity activity = getActivity();
         getPreferenceScreen().getSharedPreferences()
-                .registerOnSharedPreferenceChangeListener((SharedPreferences.OnSharedPreferenceChangeListener) activity);
+                .registerOnSharedPreferenceChangeListener(this);
     }
 
     @Override
     public void onPause() {
         super.onPause();
 
-        Activity activity = getActivity();
         getPreferenceScreen().getSharedPreferences()
-                .unregisterOnSharedPreferenceChangeListener((SharedPreferences.OnSharedPreferenceChangeListener) activity);
+                .unregisterOnSharedPreferenceChangeListener(this);
     }
 
     @Override
     public void onPrepareOptionsMenu(Menu menu) {
         super.onPrepareOptionsMenu(menu);
         menu.findItem(R.id.settings).setVisible(false);
+    }
+
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences preferences, String key) {
+        // If the settings that is changed is the notification count, then update the service notif
+        // appropriately
+        if (key.equals("pref_notification_backcount")) {
+            int backcount = Integer.parseInt(preferences.getString(key, "1"));
+
+            ScreenCountNotificationManager.updateBackcount(backcount);
+        } else if (key.equals("pref_notification_interval")) {
+            String preference = preferences.getString(key, "Hour");
+            TimeInterval interval = TimeInterval.valueOf(preference);
+
+            ScreenCountNotificationManager.updateInterval(interval);
+        }
     }
 }

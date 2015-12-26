@@ -34,9 +34,17 @@
     <string name="cards_init">cards_init</string>
 
     <string name="pref_card_collapsed">New cards are collapsed</string>
-    <string name="pref_notification_counts">Notification Counter</string>
-    <string name="pref_notification_counts_summary">The wake counts to display in the notification</string>
+    <string name="pref_notification_backcount_title">Notification Backcount</string>
+    <string name="pref_notification_backcount_summary">The amount of intervals to go back.</string>
+    <string name="pref_notification_interval_title">Notification Interval</string>
+    <string name="pref_notification_interval_summary">The counting interval for the notification.</string>
 
     <string name="time_card_expand">time_card_expand</string>
 
+    <string-array name="intervals">
+        <item>Hour</item>
+        <item>Day</item>
+        <item>Week</item>
+        <item>Month</item>
+    </string-array>
 </resources>

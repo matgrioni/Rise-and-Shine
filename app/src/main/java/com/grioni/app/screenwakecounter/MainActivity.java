@@ -23,8 +23,7 @@ import models.TimeInterval;
 /**
  * Created by Matias Grioni on 12/16/14.
  */
-public class MainActivity extends AppCompatActivity implements
-        SharedPreferences.OnSharedPreferenceChangeListener {
+public class MainActivity extends AppCompatActivity {
 
     private ScreenWakeListener onScreenWake = new ScreenWakeListener() {
         @Override
@@ -236,18 +235,4 @@ public class MainActivity extends AppCompatActivity implements
             timer.start();
     }
 
-    public void onSharedPreferenceChanged(SharedPreferences preferences, String key) {
-        // If the settings that is changed is the notification count, then update the service notif
-        // appropriately
-        if(key.equals("pref_notification_counts")) {
-            String preference = preferences.getString("pref_notification_counts", "1 Hour");
-
-            int split = preference.indexOf(" ");
-            int backcount = Integer.parseInt(preference.substring(0, split));
-            TimeInterval interval = TimeInterval.valueOf(preference.substring(split + 1));
-
-            ScreenCountNotificationManager.updateBackcount(backcount);
-            ScreenCountNotificationManager.updateInterval(interval);
-        }
-    }
 }

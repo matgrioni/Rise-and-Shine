@@ -138,12 +138,10 @@ public class ScreenCountService extends Service {
         // counts. If this is the first time the app is run, none will exist. However, if not and
         // the app has crashed and is being started again than some value will already exist here.
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
-        String notifDesc = preferences.getString("pref_notification_counts", "1 Hour");
 
-        // Parse the provided into the number and the interval.
-        int split = notifDesc.indexOf(" ");
-        int backCount = Integer.parseInt(notifDesc.substring(0, split));
-        TimeInterval interval = TimeInterval.valueOf(notifDesc.substring(split + 1));
+        int backCount = Integer.parseInt(preferences.getString("pref_notification_backcount", "1"));
+        String intervalStr = preferences.getString("pref_notification_interval", "Hour");
+        TimeInterval interval = TimeInterval.valueOf(intervalStr);
 
         ScreenCountNotificationManager.setup(getBaseContext(), NOTIF_ID);
         startForeground(NOTIF_ID, ScreenCountNotificationManager.build());

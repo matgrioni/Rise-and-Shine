@@ -6,10 +6,17 @@
         android:title="@string/pref_card_collapsed"
         android:defaultValue="true" />
 
-    <com.grioni.app.screenwakecounter.NotificationPickerPreference
-        android:key="pref_notification_counts"
-        android:title="@string/pref_notification_counts"
-        android:defaultValue="1 Hour"
-        android:summary="@string/pref_notification_counts_summary"/>
+    <EditTextPreference
+        android:key="pref_notification_backcount"
+        android:title="@string/pref_notification_backcount_title"
+        android:defaultValue="1"
+        android:summary="@string/pref_notification_backcount_summary"/>
+
+    <ListPreference
+        android:key="pref_notification_interval"
+        android:title="@string/pref_notification_interval_title"
+        android:summary="@string/pref_notification_interval_summary"
+        android:entries="@array/intervals"
+        android:entryValues="@array/intervals"/>
 
 </PreferenceScreen>
