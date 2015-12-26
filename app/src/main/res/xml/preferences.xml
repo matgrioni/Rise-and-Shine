@@ -10,7 +10,8 @@
         android:key="pref_notification_backcount"
         android:title="@string/pref_notification_backcount_title"
         android:defaultValue="1"
-        android:summary="@string/pref_notification_backcount_summary"/>
+        android:summary="@string/pref_notification_backcount_summary"
+        android:inputType="number"/>
 
     <ListPreference
         android:key="pref_notification_interval"
