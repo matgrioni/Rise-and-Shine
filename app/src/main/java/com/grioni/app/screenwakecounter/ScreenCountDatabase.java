@@ -9,6 +9,8 @@ import android.database.sqlite.SQLiteDatabase;
 import java.util.ArrayList;
 import java.util.List;
 
+import models.TimeInterval;
+
 /**
  * @author - Matias Grioni
  * @created - 12/16/14
@@ -71,6 +73,7 @@ public class ScreenCountDatabase {
 
         // Get the current table size. Important if the app crashed or was closed and it needs to be
         // restarted from where it was left off.
+        hourSize = queryTableSize(TimeCounterHelper.TABLE_HOUR_NAME);
         daySize = queryTableSize(TimeCounterHelper.TABLE_DAY_NAME);
         weekSize = queryTableSize(TimeCounterHelper.TABLE_WEEK_NAME);
         monthSize = queryTableSize(TimeCounterHelper.TABLE_MONTH_NAME);
@@ -107,6 +110,7 @@ public class ScreenCountDatabase {
             values.put("count", sumIntervalEntries(TimeInterval.Hour));
             updateTable(TimeInterval.Day, values);
 
+            database.delete(TimeCounterHelper.TABLE_HOUR_NAME, null, null);
             hourSize = 0;
             daySize++;
         }
