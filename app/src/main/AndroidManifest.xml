@@ -22,20 +22,9 @@
             </intent-filter>
         </activity>
 
-        <service
-            android:name="com.grioni.app.screenwakecounter.ScreenCountService">
-            <intent-filter>
-                <action android:name="com.grioni.app.screenwakecounter.ScreenCountService" />
-            </intent-filter>
-        </service>
+        <service android:name="com.grioni.app.screenwakecounter.ScreenCountService"/>
+        <service android:name="com.grioni.app.screenwakecounter.ScreenCountWriteService"/>
 
-        <service
-            android:name="com.grioni.app.screenwakecounter.ScreenCountWriteService">
-            <intent-filter>
-                <action android:name="com.grioni.app.screenwakecounter.ScreenCountWriteService" />
-            </intent-filter>
-        </service>
-        
         <receiver android:name="com.grioni.app.screenwakecounter.ScreenWakeReceiver">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
