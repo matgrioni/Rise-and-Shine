@@ -87,8 +87,6 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
-    private TimeCardsManager cardsManager;
-
     private TextView hourCount;
     private TextView countdown;
 
@@ -108,8 +106,6 @@ public class MainActivity extends AppCompatActivity {
 
         Intent writeIntent = new Intent(MainActivity.this, ScreenCountWriteService.class);
         bindService(writeIntent, writeConnection, Context.BIND_AUTO_CREATE);
-
-        cardsManager = ((InstanceApplication) getApplication()).getCardsManager();
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         if(toolbar != null)

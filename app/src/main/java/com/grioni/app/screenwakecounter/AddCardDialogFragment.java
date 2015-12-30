@@ -46,7 +46,7 @@ public class AddCardDialogFragment extends DialogFragment {
          *
          * @param card - The card that was added. This card is unqueried.
          */
-        public void onCardAdded(TimeCard card);
+        void onCardAdded(TimeCard card);
     }
 
     private DialogInterface.OnClickListener onPositiveButton =
