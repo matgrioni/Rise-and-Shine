@@ -36,7 +36,7 @@ public class ScreenCountService extends Service {
         }
     }
 
-    private static final int SECONDS_TO_ALARM = 60;
+    private static final int SECONDS_TO_ALARM = 60 * 60;
     private static final int NOTIF_ID = 1337;
 
     private NotificationManagerCompat notifManager;

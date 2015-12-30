@@ -21,17 +21,17 @@ public class TimeCounterHelper extends SQLiteOpenHelper {
 
     private static final String CREATE_TABLE_HOUR =
             "CREATE TABLE " + TABLE_HOUR_NAME + "("
-            + COLUMN_ID + " integer primary key autoincrement, "
+            + COLUMN_ID + " integer primary key, "
             + COLUMN_COUNT + " text not null);";
 
     private static final String CREATE_TABLE_DAY =
             "CREATE TABLE " + TABLE_DAY_NAME + "("
-            + COLUMN_ID + " integer primary key autoincrement, "
+            + COLUMN_ID + " integer primary key, "
             + COLUMN_COUNT + " text not null);";
 
     private static final String CREATE_TABLE_WEEK =
             "CREATE TABLE " + TABLE_WEEK_NAME + "("
-            + COLUMN_ID + " integer primary key autoincrement, "
+            + COLUMN_ID + " integer primary key, "
             + COLUMN_COUNT + " text not null);";
 
     private static final String CREATE_TABLE_MONTH =

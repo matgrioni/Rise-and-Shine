@@ -5,6 +5,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -101,6 +102,7 @@ public class ScreenCountDatabase {
         ContentValues values = new ContentValues();
 
         values.put("count", hourCount);
+        values.put("_id", hourSize + 1);
         updateTable(TimeInterval.Hour, values);
         hourSize++;
 
@@ -108,6 +110,7 @@ public class ScreenCountDatabase {
         // this sum of all the hours in the last day is put into the day table.
         if(hourSize > DAY_TO_HOUR - 1) {
             values.put("count", sumIntervalEntries(TimeInterval.Hour));
+            values.put("_id", daySize + 1);
             updateTable(TimeInterval.Day, values);
 
             database.delete(TimeCounterHelper.TABLE_HOUR_NAME, null, null);
@@ -122,6 +125,7 @@ public class ScreenCountDatabase {
         if (daySize != 0 && hourSize == 0) {
             if(daySize % WEEK_TO_DAY == 0) {
                 values.put("count", sumIntervalEntries(TimeInterval.Day, WEEK_TO_DAY));
+                values.put("_id", weekSize + 1);
                 updateTable(TimeInterval.Week, values);
 
                 weekSize++;
@@ -129,6 +133,7 @@ public class ScreenCountDatabase {
 
             if(daySize % MONTH_TO_DAY == 0) {
                 values.put("count", sumIntervalEntries(TimeInterval.Day, MONTH_TO_DAY));
+                values.put("_id", monthSize + 1);
                 updateTable(TimeInterval.Month, values);
 
                 monthSize++;
@@ -301,16 +306,12 @@ public class ScreenCountDatabase {
      * @param values - The ContentValues object which has the amount of wakes to add to the table.
      */
     private void updateTable(TimeInterval interval, ContentValues values) {
-        int index = getEntryCount(interval);
         String table = getTableName(interval);
 
         // Update the database with the screen wakes in the current hour. If the amount of rows,
         // updated is 0 that means it's the first day and therefore there is no id to update, it
         // must be inserted first to get the id.
-        int rows = database.update(table, values,
-                TimeCounterHelper.COLUMN_ID + "=" + Integer.toString(index + 1), null);
-        if(rows == 0)
-            database.insert(table, null, values);
+        database.insert(table, null, values);
     }
 
     /**
