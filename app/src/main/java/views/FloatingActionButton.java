@@ -1,4 +1,4 @@
-package com.grioni.app.screenwakecounter;
+package views;
 
 import android.content.Context;
 import android.content.res.Resources;
@@ -13,6 +13,8 @@ import android.graphics.drawable.StateListDrawable;
 import android.graphics.drawable.shapes.OvalShape;
 import android.util.AttributeSet;
 import android.widget.ImageButton;
+
+import com.grioni.app.screenwakecounter.R;
 
 /**
  * Created by Matias Grioni on 12/29/14.

@@ -1,4 +1,4 @@
-package com.grioni.app.screenwakecounter;
+package services;
 
 import android.app.AlarmManager;
 import android.app.PendingIntent;
@@ -12,6 +12,9 @@ import android.os.IBinder;
 import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationManagerCompat;
+
+import com.grioni.app.screenwakecounter.ScreenCountNotificationManager;
+import com.grioni.app.screenwakecounter.ScreenWakeReceiver;
 
 import models.TimeInterval;
 
@@ -36,15 +39,13 @@ public class ScreenCountService extends Service {
         }
     }
 
-    private static final int SECONDS_TO_ALARM = 60 * 60;
+    private static final int SECONDS_TO_ALARM = 30;
     private static final int NOTIF_ID = 1337;
-
-    private NotificationManagerCompat notifManager;
 
     private BroadcastReceiver wakeReceiver;
     private ScreenCountBinder countBinder = new ScreenCountBinder();
 
-    private ScreenWakeListener screenWakeListener;
+    private ServiceUpdateListener updateListener;
 
     private static int screenChangeCount;
     private static long lastAlarmTime;
@@ -60,8 +61,6 @@ public class ScreenCountService extends Service {
         wakeReceiver = new ScreenWakeReceiver();
         registerReceiver(wakeReceiver, wakeFilter);
 
-        notifManager = NotificationManagerCompat.from(getBaseContext());
-
         startNotification();
         setScreenCountWriteAlarm();
     }
@@ -69,8 +68,8 @@ public class ScreenCountService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         screenChangeCount++;
-        if (screenWakeListener != null)
-            screenWakeListener.onScreenWake();
+        if (updateListener != null)
+            updateListener.onUpdate();
 
         ScreenCountNotificationManager.refreshCount();
 
@@ -92,10 +91,10 @@ public class ScreenCountService extends Service {
      * If a callback should be run every time the screen is woken set the callback. Allows for the
      * Acvitity/Fragment that the Service is bound to communicate together.
      *
-     * @param screenWakeListener - The listener to use.
+     * @param updateListener - The listener to use.
      */
-    public void setScreenWakeListener(ScreenWakeListener screenWakeListener) {
-        this.screenWakeListener = screenWakeListener;
+    public void setUpdateListener(ServiceUpdateListener updateListener) {
+        this.updateListener = updateListener;
     }
 
     /**
@@ -115,10 +114,6 @@ public class ScreenCountService extends Service {
      */
     public static int getHourCount() {
         return screenChangeCount;
-    }
-
-    public void updateNotif() {
-
     }
 
     /**

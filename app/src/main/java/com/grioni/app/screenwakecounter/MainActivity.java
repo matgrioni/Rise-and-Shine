@@ -1,12 +1,12 @@
 package com.grioni.app.screenwakecounter;
 
 import android.app.Fragment;
+import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.IBinder;
@@ -16,33 +16,59 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.TextView;
 
-import models.TimeInterval;
+import models.TimeCard;
+import models.TimeCardCache;
+import services.ScreenCountService;
+import services.ScreenCountWriteService;
+import services.ServiceUpdateListener;
+import views.FloatingActionButton;
 
 /**
  * Created by Matias Grioni on 12/16/14.
  */
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements
+        AddCardDialogFragment.OnCardAddedListener,
+        GraphDetailFragment.OnCardDeletedListener,
+        TimeCardsFragment.OnCardClickedListener {
 
-    private ScreenWakeListener onScreenWake = new ScreenWakeListener() {
+    /**
+     * @author Matias Grioni
+     * @created 1/1/16
+     */
+    private enum FragmentState {
+        TIME_CARDS, GRAPH_DETAILS, SETTINGS, UNDEFINED
+    }
+
+    private ServiceUpdateListener onScreenWake = new ServiceUpdateListener() {
         @Override
-        public void onScreenWake() {
+        public void onUpdate() {
             updateInfo(ScreenCountService.getHourCount());
-            timeCards.update();
+
+            if (fragmentState == FragmentState.TIME_CARDS)
+                timeCards.update();
+            else if (fragmentState == FragmentState.GRAPH_DETAILS)
+                graphDetails.update();
         }
     };
 
-    private WriteListener onWrite = new WriteListener() {
+    private ServiceUpdateListener onWrite = new ServiceUpdateListener() {
         @Override
-        public void onWrite() {
+        public void onUpdate() {
             // Update the notification only here, because when the screen is woken, the
             // ScreenCountService automatically updates the notification, but when the database
             // is written to every hour it does not update since the notification is part of the
             // foreground service. This will update the foreground service notification.
-            countService.updateNotif();
             updateInfo(0);
-            timeCards.update();
+
+            if (fragmentState == FragmentState.TIME_CARDS)
+                timeCards.update();
+            else if (fragmentState == FragmentState.GRAPH_DETAILS)
+                graphDetails.update();
         }
     };
 
@@ -54,7 +80,7 @@ public class MainActivity extends AppCompatActivity {
             ScreenCountService.ScreenCountBinder binder = (ScreenCountService.ScreenCountBinder) service;
             countService = binder.getService();
 
-            countService.setScreenWakeListener(onScreenWake);
+            countService.setUpdateListener(onScreenWake);
             countBound = true;
 
             updateInfo(ScreenCountService.getHourCount());
@@ -76,7 +102,7 @@ public class MainActivity extends AppCompatActivity {
                     (ScreenCountWriteService.ScreenCountWriteBinder) service;
             writeService = binder.getService();
 
-            writeService.setWriteListener(onWrite);
+            writeService.setUpdateListener(onWrite);
             writeBound = true;
         }
 
@@ -87,11 +113,25 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
+    private View.OnClickListener onAddCard = new View.OnClickListener() {
+        @Override
+        public void onClick(View view) {
+            AddCardDialogFragment addCardDialog = new AddCardDialogFragment();
+            FragmentManager manager = getFragmentManager();
+            addCardDialog.show(manager, "add_card");
+        }
+    };
+
     private TextView hourCount;
     private TextView countdown;
 
-    private TimeCardsFragment timeCards;
+    private FloatingActionButton fab;
+    private Animation fabIn;
+    private Animation fabOut;
 
+    private FragmentState fragmentState;
+    private TimeCardsFragment timeCards;
+    private GraphDetailFragment graphDetails;
     private SettingsFragment settings;
 
     private boolean timerFinished = true;
@@ -111,49 +151,28 @@ public class MainActivity extends AppCompatActivity {
         if(toolbar != null)
             setSupportActionBar(toolbar);
 
+        setupFragments();
+
         hourCount = (TextView) findViewById(R.id.hour_count);
         countdown = (TextView) findViewById(R.id.countdown);
+        fab = (FloatingActionButton) findViewById(R.id.fab_add_time_card);
 
-        Fragment t = getFragmentManager().findFragmentByTag("timeCards");
-
-        if(t != null) {
-            timeCards = (TimeCardsFragment) t;
-        } else {
-            timeCards = new TimeCardsFragment();
-
-            FragmentTransaction transaction = getFragmentManager().beginTransaction();
-            transaction.add(R.id.time_cards_container, timeCards, "timeCards");
-            transaction.commit();
-        }
-
-        Fragment s = getFragmentManager().findFragmentByTag("settings");
-        if(s != null) {
-            settings = (SettingsFragment) s;
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        }
+        fab.setOnClickListener(onAddCard);
+        fabIn = AnimationUtils.loadAnimation(this, android.R.anim.slide_in_left);
+        fabOut = AnimationUtils.loadAnimation(this, android.R.anim.slide_out_right);
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case android.R.id.home:
-                getFragmentManager().popBackStack();
-                getSupportActionBar().setDisplayHomeAsUpEnabled(false);
-                getSupportActionBar().setTitle(R.string.app_name);
-
-                settings = null;
+                popBackStack();
 
                 break;
 
             case R.id.settings:
                 settings = new SettingsFragment();
-
-                FragmentTransaction transaction = getFragmentManager().beginTransaction();
-                transaction.replace(R.id.time_cards_container, settings, "settings");
-                transaction.addToBackStack(null);
-                transaction.commit();
-
-                getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+                addToBackStack(settings, "settings", FragmentState.SETTINGS);
 
                 break;
         }
@@ -163,16 +182,8 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        if(settings != null) {
-            getSupportActionBar().setDisplayHomeAsUpEnabled(false);
-            getSupportActionBar().setTitle(R.string.app_name);
-
-            settings = null;
-            getFragmentManager().popBackStack();
-        } else if(timeCards.getChildFragmentManager().getBackStackEntryCount() > 0) {
-            timeCards.removeChildFragment();
-            getSupportActionBar().setTitle("Rise and Shine");
-            getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+        if (fragmentState == FragmentState.SETTINGS || fragmentState == FragmentState.GRAPH_DETAILS) {
+            popBackStack();
         } else {
             super.onBackPressed();
         }
@@ -198,6 +209,22 @@ public class MainActivity extends AppCompatActivity {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.main, menu);
         return true;
+    }
+
+    @Override
+    public void onCardClicked(int position, TimeCardCache cache) {
+        graphDetails = GraphDetailFragment.newInstance(position, cache);
+        addToBackStack(graphDetails, "graphDetails", FragmentState.GRAPH_DETAILS);
+    }
+
+    @Override
+    public void onCardAdded(TimeCard card) {
+        timeCards.update();
+    }
+
+    @Override
+    public void onCardDeleted(int position, TimeCard card) {
+        popBackStack();
     }
 
     /**
@@ -231,4 +258,79 @@ public class MainActivity extends AppCompatActivity {
             timer.start();
     }
 
+    /**
+     * Sets up the main {@code Fragment} for this {@code Activity}. Through a rotation or activity
+     * recreation the activity state has to be recreated. This puts the proper {@code Fragment} as
+     * it needs to be.
+     */
+    private void setupFragments() {
+        fragmentState = FragmentState.UNDEFINED;
+
+        Fragment s = getFragmentManager().findFragmentByTag("settings");
+        if (s != null) {
+            settings = (SettingsFragment) s;
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
+            fragmentState = FragmentState.SETTINGS;
+        }
+
+        if (fragmentState == FragmentState.UNDEFINED) {
+            Fragment g = getFragmentManager().findFragmentByTag("graphDetails");
+            if (g != null) {
+                graphDetails = (GraphDetailFragment) g;
+                getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
+                fragmentState = FragmentState.GRAPH_DETAILS;
+            }
+        }
+
+        if (fragmentState == FragmentState.UNDEFINED) {
+            Fragment t = getFragmentManager().findFragmentByTag("timeCards");
+            if (t != null) {
+                timeCards = (TimeCardsFragment) t;
+            } else {
+                timeCards = new TimeCardsFragment();
+
+                FragmentTransaction transaction = getFragmentManager().beginTransaction();
+                transaction.add(R.id.time_cards_container, timeCards, "timeCards");
+                transaction.commit();
+            }
+
+            fragmentState = FragmentState.TIME_CARDS;
+        }
+    }
+
+    /**
+     *
+     */
+    private void popBackStack() {
+        getFragmentManager().popBackStack();
+        getSupportActionBar().setTitle(R.string.app_name);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+
+        fragmentState = FragmentState.TIME_CARDS;
+        timeCards.update();
+
+        fab.startAnimation(fabIn);
+        fab.setVisibility(View.VISIBLE);
+    }
+
+    /**
+     *
+     * @param f
+     * @param tag
+     */
+    private void addToBackStack(Fragment f, String tag, FragmentState newState) {
+        FragmentTransaction transaction = getFragmentManager().beginTransaction();
+        transaction.replace(R.id.time_cards_container, f, tag);
+        transaction.addToBackStack(null);
+        transaction.commit();
+
+        fragmentState = newState;
+
+        fab.startAnimation(fabOut);
+        fab.setVisibility(View.GONE);
+
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+    }
 }

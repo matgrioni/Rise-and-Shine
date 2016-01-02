@@ -4,6 +4,8 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 
+import services.ScreenCountService;
+
 /**
  * Created by Matias Grioni on 12/15/14.
  */

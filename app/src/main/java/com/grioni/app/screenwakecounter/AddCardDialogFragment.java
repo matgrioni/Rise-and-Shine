@@ -104,10 +104,9 @@ public class AddCardDialogFragment extends DialogFragment {
         cardsManager = TimeCardsManager.getInstance(activity);
 
         try {
-            cardAddedListener = (OnCardAddedListener) getParentFragment();
+            cardAddedListener = (OnCardAddedListener) activity;
         } catch (ClassCastException ex) {
-            throw new ClassCastException(getParentFragment().toString() +
-                " must implement OnCardAddedListener");
+            throw new ClassCastException("Host activity must implement OnCardAddedListener");
         }
     }
 

@@ -12,11 +12,10 @@ import android.widget.PopupMenu;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import java.util.List;
-
 import models.TimeCard;
 import models.TimeCardCache;
 import models.TimeInterval;
+import views.GraphView;
 
 /**
  * Created by Matias Grioni on 1/15/15.

@@ -27,7 +27,7 @@ public class TimeCardAdapter extends RecyclerView.Adapter<TimeCardHolder> {
     public TimeCardAdapter(Context context, List<TimeCard> cards, Map<TimeCard, TimeCardCache> caches,
                            TimeCardEventListener cardEventListener) {
         baseContext = context;
-        this.cards = new ArrayList<TimeCard>(cards);
+        this.cards = new ArrayList<>(cards);
         this.caches = new HashMap<>(caches);
         this.cardEventListener = cardEventListener;
     }
@@ -78,9 +78,12 @@ public class TimeCardAdapter extends RecyclerView.Adapter<TimeCardHolder> {
      *
      * @param position
      * @param card
+     * @param cache
      */
-    public void updateCard(int position, TimeCard card) {
+    public void updateCard(int position, TimeCard card, TimeCardCache cache) {
         cards.set(position, card);
+        caches.put(card, cache);
+
         notifyItemChanged(position);
     }
 
@@ -105,9 +108,11 @@ public class TimeCardAdapter extends RecyclerView.Adapter<TimeCardHolder> {
     /**
      *
      * @param cards
+     * @param cache
      */
-    public void update(List<TimeCard> cards) {
-        this.cards = new ArrayList<TimeCard>(cards);
+    public void update(List<TimeCard> cards, Map<TimeCard, TimeCardCache> cache) {
+        this.cards = new ArrayList<>(cards);
+        this.caches = new HashMap<>(cache);
         notifyDataSetChanged();
     }
 }

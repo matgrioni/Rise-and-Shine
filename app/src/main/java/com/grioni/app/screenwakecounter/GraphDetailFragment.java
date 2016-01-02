@@ -18,7 +18,10 @@ import android.widget.Toast;
 import models.TimeCard;
 import models.TimeCardCache;
 import models.TimeInterval;
+import utils.DataUtils;
 import utils.Exporter;
+import utils.LabelUtils;
+import views.GraphView;
 
 /**
  * @author - Matias Grioni
@@ -110,7 +113,7 @@ public class GraphDetailFragment extends Fragment {
                 " extend AppCompatActivity");
         }
 
-        actionBar.setTitle(getGraphTitle());
+        actionBar.setTitle(LabelUtils.last(card.interval, card.backCount) + cache.count);
     }
 
     @Override
@@ -206,14 +209,14 @@ public class GraphDetailFragment extends Fragment {
      */
     public void update() {
         cache.data = countDatabase.getEntries(card.interval, card.backCount);
-
-        graphDetailAdapter.setData(cache.data);
-        graph.setData(cache.data);
+        cache.count = DataUtils.sum(cache.data);
 
         // Redraw the graph after updating its data
+        graphDetailAdapter.setData(cache.data);
+        graph.setData(cache.data);
         graph.postInvalidate();
 
-        actionBar.setTitle(getGraphTitle());
+        actionBar.setTitle(LabelUtils.last(card.interval, card.backCount) + cache.count);
     }
 
     /**
@@ -229,25 +232,6 @@ public class GraphDetailFragment extends Fragment {
             fileBuffer += (i + 1) + "\t" + cache.data.get(i) + "\n";
 
         return fileBuffer;
-    }
-
-    /**
-     * Creates the appropriate title for this Fragment. If the TimeCard goes
-     * back more than one TimeUnit then, the title should be Last x
-     * months/weeks/days... If it only goes back one TimeUnit then it should
-     * simply be Last month/week...
-     *
-     * @return - The ActionBar title for this Fragment given its TimeCard.
-     */
-    private String getGraphTitle() {
-        String title;
-        if(card.backCount > 1)
-            title = "Last " + card.backCount + " " + card.interval.name().toLowerCase() + "s";
-        else
-            title = "Last " + card.interval.name().toLowerCase();
-        title += ": " + cache.count;
-
-        return title;
     }
 
     /**

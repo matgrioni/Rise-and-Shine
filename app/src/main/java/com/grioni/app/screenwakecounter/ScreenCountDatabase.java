@@ -5,12 +5,12 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
-import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import models.TimeInterval;
+import services.ScreenCountService;
 
 /**
  * @author - Matias Grioni
@@ -21,9 +21,9 @@ import models.TimeInterval;
  * points for that time period. This class uses a singleton instance.
  */
 public class ScreenCountDatabase {
-    public static final int DAY_TO_HOUR = 24;
-    public static final int WEEK_TO_DAY = 7;
-    public static final int MONTH_TO_DAY = 30;
+    public static final int DAY_TO_HOUR = 4;
+    public static final int WEEK_TO_DAY = 3;
+    public static final int MONTH_TO_DAY = 4;
 
     private static ScreenCountDatabase instance;
 

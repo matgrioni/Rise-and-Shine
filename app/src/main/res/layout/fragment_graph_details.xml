@@ -7,7 +7,7 @@
     android:background="@color/graph_details_background"
     android:orientation="vertical">
 
-    <com.grioni.app.screenwakecounter.GraphView
+    <views.GraphView
         android:id="@+id/fragment_details_graph"
         android:layout_width="match_parent"
         android:layout_height="@dimen/graph_height"

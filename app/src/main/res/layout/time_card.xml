@@ -22,7 +22,7 @@
             android:paddingLeft="@dimen/time_card_title_padding_horizontal"
             android:textAppearance="@style/TextAppearance.Medium"/>
 
-        <com.grioni.app.screenwakecounter.GraphView
+        <views.GraphView
             android:id="@+id/graph"
             android:layout_width="match_parent"
             android:layout_height="@dimen/graph_height"

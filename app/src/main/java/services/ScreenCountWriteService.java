@@ -1,9 +1,13 @@
-package com.grioni.app.screenwakecounter;
+package services;
 
 import android.app.Service;
 import android.content.Intent;
 import android.os.Binder;
 import android.os.IBinder;
+
+import com.grioni.app.screenwakecounter.InstanceApplication;
+import com.grioni.app.screenwakecounter.ScreenCountDatabase;
+import com.grioni.app.screenwakecounter.ScreenCountNotificationManager;
 
 /**
  * Created by Matias Grioni on 12/21/14.
@@ -17,7 +21,7 @@ public class ScreenCountWriteService extends Service {
     }
 
     private ScreenCountWriteBinder binder = new ScreenCountWriteBinder();
-    private WriteListener writeListener;
+    private ServiceUpdateListener updateListener;
     private ScreenCountDatabase countDatabase;
 
     @Override
@@ -34,8 +38,8 @@ public class ScreenCountWriteService extends Service {
         ScreenCountService.reset();
         ScreenCountNotificationManager.refreshCount();
 
-        if(writeListener != null)
-            writeListener.onWrite();
+        if(updateListener != null)
+            updateListener.onUpdate();
 
         return START_STICKY;
     }
@@ -47,9 +51,9 @@ public class ScreenCountWriteService extends Service {
 
     /**
      *
-     * @param writeListener
+     * @param updateListener
      */
-    public void setWriteListener(WriteListener writeListener) {
-        this.writeListener = writeListener;
+    public void setUpdateListener(ServiceUpdateListener updateListener) {
+        this.updateListener = updateListener;
     }
 }
