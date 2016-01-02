@@ -322,7 +322,7 @@ public class MainActivity extends AppCompatActivity implements
      */
     private void addToBackStack(Fragment f, String tag, FragmentState newState) {
         FragmentTransaction transaction = getFragmentManager().beginTransaction();
-        transaction.replace(R.id.time_cards_container, f, tag);
+        transaction.add(R.id.time_cards_container, f, tag);
         transaction.addToBackStack(null);
         transaction.commit();
 
