@@ -32,21 +32,21 @@ import models.TimeInterval;
 public class TimeCardsFragment extends Fragment {
 
     public interface OnCardClickedListener {
-        void onCardClicked(int position, TimeCardCache cardCache);
+        void onCardClicked(TimeCard card, TimeCardCache cardCache);
     }
 
     private TimeCardEventListener cardEventListener = new TimeCardEventListener() {
         @Override
-        public void onCardClicked(int position) {
-            TimeCard card = cardsManager.getCard(position);
+        public void onCardClicked(long id) {
+            TimeCard card = cardsManager.getCard(id);
             TimeCardCache cardCache = cache.get(card);
 
-            cardClickedListener.onCardClicked(position, cardCache);
+            cardClickedListener.onCardClicked(card, cardCache);
         }
 
         @Override
-        public void onCardStateChanged(int position) {
-            cardsManager.changeCardState(position);
+        public void onCardStateChanged(long id) {
+            cardsManager.changeCardState(id);
         }
     };
 
@@ -61,8 +61,8 @@ public class TimeCardsFragment extends Fragment {
         @Override
         public void onSwiped(RecyclerView.ViewHolder viewHolder, int i) {
             int position = viewHolder.getAdapterPosition();
-            cardsManager.remove(position);
-            cardsAdapter.deleteCard(position);
+            TimeCard card = cardsAdapter.deleteCard(position);
+            cardsManager.remove(card.id);
         }
     };
 
@@ -96,12 +96,11 @@ public class TimeCardsFragment extends Fragment {
         setupFirstCards();
 
         cache = new HashMap<>();
-        for(int i = 0; i < cardsManager.getCards().size(); i++) {
-            TimeCard cur = cardsManager.getCard(i);
-            List<Integer> counts = countDatabase.getEntries(cur.interval, cur.backCount);
+        for(TimeCard card : cardsManager.getCards()) {
+            List<Integer> counts = countDatabase.getEntries(card.interval, card.backCount);
 
             TimeCardCache cardCache = new TimeCardCache(counts);
-            cache.put(cur, cardCache);
+            cache.put(card, cardCache);
         }
     }
 
@@ -133,12 +132,11 @@ public class TimeCardsFragment extends Fragment {
      * GraphDetailFragment if any is visible.
      */
     public void update() {
-        for(int i = 0; i < cardsManager.size(); i++) {
-            TimeCard curCard = cardsManager.getCard(i);
-            List<Integer> points = countDatabase.getEntries(curCard.interval, curCard.backCount);
+        for (TimeCard card : cardsManager.getCards()) {
+            List<Integer> points = countDatabase.getEntries(card.interval, card.backCount);
 
             TimeCardCache cardCache = new TimeCardCache(points);
-            cache.put(curCard, cardCache);
+            cache.put(card, cardCache);
         }
 
         cardsAdapter.update(cardsManager.getCards(), cache);

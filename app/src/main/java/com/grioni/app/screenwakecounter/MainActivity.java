@@ -212,8 +212,8 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     @Override
-    public void onCardClicked(int position, TimeCardCache cache) {
-        graphDetails = GraphDetailFragment.newInstance(position, cache);
+    public void onCardClicked(TimeCard card, TimeCardCache cache) {
+        graphDetails = GraphDetailFragment.newInstance(card, cache);
         addToBackStack(graphDetails, "graphDetails", FragmentState.GRAPH_DETAILS);
     }
 
@@ -223,7 +223,7 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     @Override
-    public void onCardDeleted(int position, TimeCard card) {
+    public void onCardDeleted(TimeCard card) {
         popBackStack();
     }
 

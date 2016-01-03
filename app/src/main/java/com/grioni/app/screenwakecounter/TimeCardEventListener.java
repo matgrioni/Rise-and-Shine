@@ -16,15 +16,15 @@ public interface TimeCardEventListener {
     /**
      * Callback for when the TimeCardHolder item is clicked.
      *
-     * @param position - The position of the card in the TimeCards list.
+     * @param id The position of the card in the TimeCards list.
      */
-    void onCardClicked(int position);
+    void onCardClicked(long id);
 
     /**
      * Callback for when the arrow to change the collapsed state of the card is
      * clicked.
      *
-     * @param position - The position of the card in the TimeCards list.
+     * @param id The position of the card in the TimeCards list.
      */
-    void onCardStateChanged(int position);
+    void onCardStateChanged(long id);
 }

@@ -15,6 +15,7 @@ import android.widget.TextView;
 import models.TimeCard;
 import models.TimeCardCache;
 import models.TimeInterval;
+import utils.LabelUtils;
 import views.GraphView;
 
 /**
@@ -29,7 +30,7 @@ public class TimeCardHolder extends RecyclerView.ViewHolder {
 
         @Override
         public void onAnimationEnd(Animation animation) {
-            cardEventListener.onCardStateChanged(getPosition());
+            cardEventListener.onCardStateChanged(card.id);
         }
 
         @Override
@@ -57,6 +58,7 @@ public class TimeCardHolder extends RecyclerView.ViewHolder {
         }
     };
 
+    private Context baseContext;
     private TimeCardEventListener cardEventListener;
 
     public TextView title;
@@ -67,8 +69,7 @@ public class TimeCardHolder extends RecyclerView.ViewHolder {
 
     public PopupMenu popupMenu;
 
-    private Context baseContext;
-
+    private TimeCard card;
     private TimeCardCache cache;
 
     /**
@@ -97,15 +98,15 @@ public class TimeCardHolder extends RecyclerView.ViewHolder {
     /**
      *
      */
-    private void setListeners(final TimeCard card) {
+    private void setListeners() {
         itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                cardEventListener.onCardClicked(getPosition());
+                cardEventListener.onCardClicked(card.id);
             }
         });
 
-        if(card.collapsed)
+        if (card.collapsed)
             action.setImageResource(R.drawable.card_expand);
         else
             action.setImageResource(R.drawable.card_collapse);
@@ -148,12 +149,10 @@ public class TimeCardHolder extends RecyclerView.ViewHolder {
      *
      */
     public void bindHolder(TimeCard card) {
-        String label = "Last ";
-        if (card.backCount > 1)
-            label += Integer.toString(card.backCount) + " " + card.interval.name() + "s";
-        else
-            label += card.interval.name();
-        title.setText(label + ": " + cache.count);
+        this.card = card;
+
+        String label = LabelUtils.last(card.interval, card.backCount);
+        title.setText(label + cache.count);
 
         String axis = "Hour";
         if (card.backCount == 1) {
@@ -169,9 +168,16 @@ public class TimeCardHolder extends RecyclerView.ViewHolder {
                     (ViewGroup.MarginLayoutParams) graph.getLayoutParams();
             params.bottomMargin = 0;
             graph.setLayoutParams(params);
+        } else {
+            // Do the opposite check even though the xml layout defines the negative margin as such.
+            // This is because views are recycled.
+            ViewGroup.MarginLayoutParams params =
+                    (ViewGroup.MarginLayoutParams) graph.getLayoutParams();
+            params.bottomMargin = baseContext.getResources().getDimensionPixelSize(R.dimen.graph_margin_bottom);
+            graph.setLayoutParams(params);
         }
 
-        setListeners(card);
+        setListeners();
     }
 
     /**

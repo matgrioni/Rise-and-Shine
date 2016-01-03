@@ -22,6 +22,13 @@ import android.os.Parcelable;
  * Implements Parcelable so that the TimeCard can be written to the database.
  */
 public class TimeCard implements Parcelable {
+    public static long ID_SIZE;
+
+    static {
+        ID_SIZE = 0;
+    }
+
+    public long id;
     public TimeInterval interval;
     public int backCount;
     public boolean collapsed;
@@ -45,6 +52,9 @@ public class TimeCard implements Parcelable {
      *                  visible in the TimeCardAdapter.
      */
     public TimeCard(TimeInterval interval, int backCount, boolean collapsed) {
+        ID_SIZE++;
+
+        this.id = ID_SIZE;
         this.interval = interval;
         this.backCount = backCount;
         this.collapsed = collapsed;
@@ -82,6 +92,7 @@ public class TimeCard implements Parcelable {
      * @param in - The Parcel to construct this TimeCard from.
      */
     public TimeCard(Parcel in) {
+        id = in.readLong();
         interval = TimeInterval.valueOf(in.readString());
         backCount = in.readInt();
         collapsed = in.readInt() == 1;
@@ -102,7 +113,8 @@ public class TimeCard implements Parcelable {
         }
 
         TimeCard card = (TimeCard) obj;
-        return this.interval == card.interval && this.backCount == card.backCount && this.collapsed == card.collapsed;
+        return this.id == card.id && this.interval == card.interval &&
+                this.backCount == card.backCount && this.collapsed == card.collapsed;
     }
 
     @Override
@@ -112,6 +124,7 @@ public class TimeCard implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
+        dest.writeLong(id);
         dest.writeString(interval.name());
         dest.writeInt(backCount);
         dest.writeInt(collapsed ? 1 : 0);

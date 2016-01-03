@@ -91,9 +91,13 @@ public class TimeCardAdapter extends RecyclerView.Adapter<TimeCardHolder> {
      *
      * @param position
      */
-    public void deleteCard(int position) {
-        cards.remove(cards.get(position));
+    public TimeCard deleteCard(int position) {
+        TimeCard card = cards.get(position);
+        cards.remove(card);
+
         notifyItemRemoved(position);
+
+        return card;
     }
 
     /**

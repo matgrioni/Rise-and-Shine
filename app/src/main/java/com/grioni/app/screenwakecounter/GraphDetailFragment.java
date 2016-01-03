@@ -46,11 +46,9 @@ public class GraphDetailFragment extends Fragment {
          * Callback when a user deletes the TimeCard this GraphDetailFragment
          * represents.
          *
-         * @param position - The former position of the TimeCard in the
-         *                 TimeCardsManager TimeCards list.
          * @param card - The card that was deleted.
          */
-        void onCardDeleted(int position, TimeCard card);
+        void onCardDeleted(TimeCard card);
     }
 
     private TimeCardsManager cardsManager;
@@ -67,23 +65,21 @@ public class GraphDetailFragment extends Fragment {
     private TimeCard card;
     private TimeCardCache cache;
 
-    // The position in the TimeCardsManager list of the TimeCard to be detailed.
-    private int position;
-
     /**
      * Instantiates a new instance of this fragment type, using data from the
      * TimeCard to display the graph and data points.
      *
-     * @param position - The position of this TimeCard in the global list of
+     * @param card The position of this TimeCard in the global list of
      *                 cards.
-     * @return - The new instance of the GraphDetailFragment using the provided
+     * @param cache
+     * @return The new instance of the GraphDetailFragment using the provided
      *         params.
      */
-    public static GraphDetailFragment newInstance(int position, TimeCardCache cache) {
+    public static GraphDetailFragment newInstance(TimeCard card, TimeCardCache cache) {
         GraphDetailFragment graphDetails = new GraphDetailFragment();
 
         Bundle arguments = new Bundle();
-        arguments.putInt("position", position);
+        arguments.putParcelable("card", card);
         arguments.putParcelable("cache", cache);
         graphDetails.setArguments(arguments);
 
@@ -95,7 +91,7 @@ public class GraphDetailFragment extends Fragment {
         super.onAttach(activity);
 
         try {
-            cardDeletedListener = (OnCardDeletedListener) getParentFragment();
+            cardDeletedListener = (OnCardDeletedListener) activity;
         } catch (ClassCastException ex) {
             throw new ClassCastException(getParentFragment().toString() +
                 " must implement OnCardDeletedListener");
@@ -127,9 +123,8 @@ public class GraphDetailFragment extends Fragment {
         // Get the TimeCard given the position and the TimeCard should have
         // already been queried and up to date.
         Bundle arguments = getArguments();
-        position = arguments.getInt("position");
+        card = arguments.getParcelable("card");
         cache = arguments.getParcelable("cache");
-        card = cardsManager.getCard(position);
 
         // If this card only goes back one unit, then the axis has to break this TimeUnit into
         // smaller pieces. For example, Month -> Day, Week -> Day, Day -> Hour. Since minutes
@@ -195,8 +190,8 @@ public class GraphDetailFragment extends Fragment {
                 break;
 
             case R.id.menu_delete:
-                cardsManager.remove(position);
-                cardDeletedListener.onCardDeleted(position, card);
+                cardsManager.remove(card.id);
+                cardDeletedListener.onCardDeleted(card);
                 break;
 
         }

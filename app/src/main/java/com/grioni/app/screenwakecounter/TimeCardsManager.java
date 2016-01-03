@@ -44,7 +44,7 @@ public class TimeCardsManager {
         // cards for it too.
         if(instance == null) {
             instance = new TimeCardsManager(context);
-            cards = new ArrayList<TimeCard>();
+            cards = new ArrayList<>();
         }
 
         return instance;
@@ -111,12 +111,14 @@ public class TimeCardsManager {
     /**
      * Removes the card at the given position from the list and the database.
      *
-     * @param position - The position of the TimeCard to remove.
+     * @param id The position of the TimeCard to remove.
      */
-    public TimeCard remove(int position) {
-        TimeCard card = cards.remove(position);
+    public TimeCard remove(long id) {
+        int index = getCardIndexById(id);
+        TimeCard card = cards.remove(index);
+
         database.delete(TimeCardHelper.TABLE_CARDS_NAME,
-                TimeCardHelper.COLUMN_ID + "=" + (position + 1), null);
+                TimeCardHelper.COLUMN_ID + "=" + card.id, null);
 
         return card;
     }
@@ -127,26 +129,29 @@ public class TimeCardsManager {
      * the card at the position changing its collapsible field then setting it
      * back.
      *
-     * @param position - The position of the card to update in the card list. position + 1 is the id
+     * @param id The position of the card to update in the card list. position + 1 is the id
      *                 in the database.
      */
-    public void changeCardState(int position) {
-        TimeCard card = cards.get(position);
+    public void changeCardState(long id) {
+        int index = getCardIndexById(id);
+        TimeCard card = cards.get(index);
         card.collapsed = !card.collapsed;
 
-        this.updateCard(position, card);
+        this.updateCard(id, card);
     }
 
     /**
      * Update the TimeCard in the list at the provided position and in the database corresponding to
      * the position.
      *
-     * @param position - The position of the TimeCard to replace in the TimeCard list and
+     * @param id The position of the TimeCard to replace in the TimeCard list and
      *                 (position + 1) is the id of the row for the TimeCard in the database.
-     * @param card - The TimeCard to replace the old TimeCard with.
+     * @param card The TimeCard to replace the old TimeCard with.
      */
-    public void updateCard(int position, TimeCard card) {
-        cards.set(position, card);
+    public void updateCard(long id, TimeCard card) {
+        int index = getCardIndexById(id);
+        card.id = id;
+        cards.set(index, card);
 
         // Update the position-th card in the table using the passed in card.
         ContentValues values = new ContentValues();
@@ -157,16 +162,7 @@ public class TimeCardsManager {
         // Update the table, which starts id at 1, at the (position+1)th id, with the passed in card
         // information.
         database.update(TimeCardHelper.TABLE_CARDS_NAME, values,
-                TimeCardHelper.COLUMN_ID + "=" + (position + 1), null);
-    }
-
-    /**
-     * Update the cards for the manager to the passed in list.
-     *
-     * @param cards - Sets the cards of the TimeCardsManager. Aliasing does not occur.
-     */
-    public void updateCards(List<TimeCard> cards) {
-        this.cards = new ArrayList<TimeCard>(cards);
+                TimeCardHelper.COLUMN_ID + "=" + card.id, null);
     }
 
     /**
@@ -175,23 +171,24 @@ public class TimeCardsManager {
      * @return - The list of TimeCards.
      */
     public List<TimeCard> getCards() {
-        return this.cards;
+        return cards;
     }
 
     /**
      * The TimeCard at the provided position.
      *
-     * @param position - The position at which the desired card is at.
-     * @return - The TimeCard at the desired position.
+     * @param id The position at which the desired card is at.
+     * @return The TimeCard at the desired position.
      */
-    public TimeCard getCard(int position) {
-        return cards.get(position);
+    public TimeCard getCard(long id) {
+        int index = getCardIndexById(id);
+        return cards.get(index);
     }
 
     /**
      * The amount of cards this manager has.
      *
-     * @return -The number of TimeCards in this manager.
+     * @return The number of TimeCards in this manager.
      */
     public int size() {
         return cards.size();
@@ -205,6 +202,7 @@ public class TimeCardsManager {
      */
     private TimeCard cursorToCard(Cursor cursor) {
         TimeCard card = new TimeCard();
+        card.id = cursor.getLong(0);
         card.interval = TimeInterval.valueOf(cursor.getString(1));
         card.backCount = cursor.getInt(2);
 
@@ -212,5 +210,28 @@ public class TimeCardsManager {
         card.collapsed = (collapsed != 0);
 
         return card;
+    }
+
+    /**
+     *
+     * @param id
+     * @return
+     */
+    private int getCardIndexById(long id) {
+        int pos = -1;
+        boolean found = false;
+
+        int i = 0;
+        while(i < cards.size() && !found) {
+            TimeCard card = cards.get(i);
+            if(card.id == id) {
+                found = true;
+                pos = i;
+            }
+
+            i++;
+        }
+
+        return pos;
     }
 }
