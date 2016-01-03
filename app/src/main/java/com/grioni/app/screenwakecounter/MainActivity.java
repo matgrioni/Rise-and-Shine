@@ -31,41 +31,36 @@ import services.ServiceUpdateListener;
 import views.FloatingActionButton;
 
 /**
- * Created by Matias Grioni on 12/16/14.
+ * @author Matias Grioni
+ * @created 12/16/14
+ *
+ * The {@code MainActivity} for this application. Handles {@code Fragment} communication and
+ * transactions for the main screen.
  */
 public class MainActivity extends AppCompatActivity implements
         AddCardDialogFragment.OnCardAddedListener,
         GraphDetailFragment.OnCardDeletedListener,
         TimeCardsFragment.OnCardClickedListener {
 
+    private static final String TIME_CARDS_FRAGMENT_TAG = "timeCards";
+    private static final String GRAPH_DETAILS_FRAGMENT_TAG = "graphDetails";
+    private static final String SETTINGS_FRAGMENT_TAG = "settings";
+
     /**
      * @author Matias Grioni
      * @created 1/1/16
+     *
+     * The current state of this {@code Activity} based on what {@code Fragment} is currently
+     * visible.
      */
     private enum FragmentState {
         TIME_CARDS, GRAPH_DETAILS, SETTINGS, UNDEFINED
     }
 
-    private ServiceUpdateListener onScreenWake = new ServiceUpdateListener() {
+    private ServiceUpdateListener onScreenWakeCountChange = new ServiceUpdateListener() {
         @Override
         public void onUpdate() {
             updateInfo(ScreenCountService.getHourCount());
-
-            if (fragmentState == FragmentState.TIME_CARDS)
-                timeCards.update();
-            else if (fragmentState == FragmentState.GRAPH_DETAILS)
-                graphDetails.update();
-        }
-    };
-
-    private ServiceUpdateListener onWrite = new ServiceUpdateListener() {
-        @Override
-        public void onUpdate() {
-            // Update the notification only here, because when the screen is woken, the
-            // ScreenCountService automatically updates the notification, but when the database
-            // is written to every hour it does not update since the notification is part of the
-            // foreground service. This will update the foreground service notification.
-            updateInfo(0);
 
             if (fragmentState == FragmentState.TIME_CARDS)
                 timeCards.update();
@@ -82,7 +77,7 @@ public class MainActivity extends AppCompatActivity implements
             ScreenCountService.ScreenCountBinder binder = (ScreenCountService.ScreenCountBinder) service;
             countService = binder.getService();
 
-            countService.setUpdateListener(onScreenWake);
+            countService.setUpdateListener(onScreenWakeCountChange);
             countBound = true;
 
             updateInfo(ScreenCountService.getHourCount());
@@ -104,7 +99,7 @@ public class MainActivity extends AppCompatActivity implements
                     (ScreenCountWriteService.ScreenCountWriteBinder) service;
             writeService = binder.getService();
 
-            writeService.setUpdateListener(onWrite);
+            writeService.setUpdateListener(onScreenWakeCountChange);
             writeBound = true;
         }
 
@@ -150,8 +145,7 @@ public class MainActivity extends AppCompatActivity implements
         bindService(writeIntent, writeConnection, Context.BIND_AUTO_CREATE);
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        if(toolbar != null)
-            setSupportActionBar(toolbar);
+        setSupportActionBar(toolbar);
 
         setupFragments();
         setupFirstCards();
@@ -177,7 +171,7 @@ public class MainActivity extends AppCompatActivity implements
 
             case R.id.settings:
                 settings = new SettingsFragment();
-                addToBackStack(settings, "settings", FragmentState.SETTINGS);
+                addToBackStack(settings, SETTINGS_FRAGMENT_TAG, FragmentState.SETTINGS);
 
                 break;
         }
@@ -219,7 +213,7 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     public void onCardClicked(TimeCard card, TimeCardCache cache) {
         graphDetails = GraphDetailFragment.newInstance(card, cache);
-        addToBackStack(graphDetails, "graphDetails", FragmentState.GRAPH_DETAILS);
+        addToBackStack(graphDetails, GRAPH_DETAILS_FRAGMENT_TAG, FragmentState.GRAPH_DETAILS);
     }
 
     @Override
@@ -272,7 +266,7 @@ public class MainActivity extends AppCompatActivity implements
     private void setupFragments() {
         fragmentState = FragmentState.UNDEFINED;
 
-        Fragment s = getFragmentManager().findFragmentByTag("settings");
+        Fragment s = getFragmentManager().findFragmentByTag(SETTINGS_FRAGMENT_TAG);
         if (s != null) {
             settings = (SettingsFragment) s;
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -281,7 +275,7 @@ public class MainActivity extends AppCompatActivity implements
         }
 
         if (fragmentState == FragmentState.UNDEFINED) {
-            Fragment g = getFragmentManager().findFragmentByTag("graphDetails");
+            Fragment g = getFragmentManager().findFragmentByTag(GRAPH_DETAILS_FRAGMENT_TAG);
             if (g != null) {
                 graphDetails = (GraphDetailFragment) g;
                 getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -291,14 +285,14 @@ public class MainActivity extends AppCompatActivity implements
         }
 
         if (fragmentState == FragmentState.UNDEFINED) {
-            Fragment t = getFragmentManager().findFragmentByTag("timeCards");
+            Fragment t = getFragmentManager().findFragmentByTag(TIME_CARDS_FRAGMENT_TAG);
             if (t != null) {
                 timeCards = (TimeCardsFragment) t;
             } else {
                 timeCards = new TimeCardsFragment();
 
                 FragmentTransaction transaction = getFragmentManager().beginTransaction();
-                transaction.add(R.id.time_cards_container, timeCards, "timeCards");
+                transaction.add(R.id.time_cards_container, timeCards, TIME_CARDS_FRAGMENT_TAG);
                 transaction.commit();
             }
 
@@ -312,9 +306,10 @@ public class MainActivity extends AppCompatActivity implements
      * action bar, and updating the {@code TimeCardsFragment} and {@code FragmentState}.
      */
     private void popBackStack() {
-        getFragmentManager().popBackStack();
         getSupportActionBar().setTitle(R.string.app_name);
         getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+
+        getFragmentManager().popBackStack();
 
         fragmentState = FragmentState.TIME_CARDS;
         timeCards.update();
@@ -332,6 +327,8 @@ public class MainActivity extends AppCompatActivity implements
      * @param tag The tag to add the {@code Fragment} with.
      */
     private void addToBackStack(Fragment f, String tag, FragmentState newState) {
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
         FragmentTransaction transaction = getFragmentManager().beginTransaction();
         transaction.add(R.id.time_cards_container, f, tag);
         transaction.addToBackStack(null);
@@ -341,8 +338,6 @@ public class MainActivity extends AppCompatActivity implements
 
         fab.startAnimation(fabOut);
         fab.setVisibility(View.GONE);
-
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
     }
 
     /**

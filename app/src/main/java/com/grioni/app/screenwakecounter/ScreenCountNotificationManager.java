@@ -11,8 +11,8 @@ import models.TimeInterval;
 import utils.LabelUtils;
 
 /**
- * @author - Matias Grioni
- * @created - 12/23/15
+ * @author Matias Grioni
+ * @created 12/23/15
  *
  * A manager for the persistent application notification that displays the current screen wakes
  * for a specific amount of time defined in the settings.
@@ -29,7 +29,6 @@ public class ScreenCountNotificationManager {
     private static int icon;
     private static int bgcolor;
 
-    private static String label;
     private static int count;
 
     private static TimeInterval interval;
@@ -40,8 +39,8 @@ public class ScreenCountNotificationManager {
      * the unique notification that will be used as the id for this notification. The setup allows
      * for future methods manipulating the notification to be called.
      *
-     * @param _context - The context to use for notification creation and management.
-     * @param id
+     * @param _context The context to use for notification creation and management.
+     * @param id The id for the {@code Notification}.
      */
     public static void setup(Context _context, int id) {
         context = _context;
@@ -126,7 +125,7 @@ public class ScreenCountNotificationManager {
      * in the notification.
      */
     private static void updateLabelAndCount() {
-        label = LabelUtils.last(interval, backCount);
+        String label = LabelUtils.last(interval, backCount);
         count = countDatabase.getCount(interval, backCount);
 
         builder.setContentTitle(label + count);

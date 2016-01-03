@@ -8,7 +8,6 @@ import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.support.design.widget.Snackbar;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -102,8 +101,6 @@ public class AddCardDialogFragment extends DialogFragment {
     private EditText backCountView;
     private Spinner cardTypeView;
 
-    private View snackbarView;
-
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
@@ -119,15 +116,13 @@ public class AddCardDialogFragment extends DialogFragment {
 
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
-        // Get the LayoutInflater and inflate the dialog view and get the
-        // needed child views.
         LayoutInflater inflater = getActivity().getLayoutInflater();
 
         View dialogView = inflater.inflate(R.layout.dialog_add_card, null);
         backCountView = (EditText) dialogView.findViewById(R.id.dialog_back_count);
         cardTypeView = (Spinner) dialogView.findViewById(R.id.dialog_card_type);
 
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(getActivity(),
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(getActivity(),
                 android.R.layout.simple_list_item_1, getIntervals());
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         cardTypeView.setAdapter(adapter);
@@ -151,7 +146,7 @@ public class AddCardDialogFragment extends DialogFragment {
      * @return - A list of the names of the TimeIntervals.
      */
     private List<String> getIntervals() {
-        List<String> intervals = new ArrayList<String>();
+        List<String> intervals = new ArrayList<>();
 
         for(TimeInterval interval : TimeInterval.values())
             intervals.add(interval.toString());

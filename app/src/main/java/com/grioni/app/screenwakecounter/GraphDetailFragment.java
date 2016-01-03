@@ -69,11 +69,9 @@ public class GraphDetailFragment extends Fragment {
      * Instantiates a new instance of this fragment type, using data from the
      * TimeCard to display the graph and data points.
      *
-     * @param card The position of this TimeCard in the global list of
-     *                 cards.
-     * @param cache
-     * @return The new instance of the GraphDetailFragment using the provided
-     *         params.
+     * @param card The position of this TimeCard in the global list of cards.
+     * @param cache The {@code TimeCardCache} associated with this.
+     * @return The new instance of the GraphDetailFragment using the provided params.
      */
     public static GraphDetailFragment newInstance(TimeCard card, TimeCardCache cache) {
         GraphDetailFragment graphDetails = new GraphDetailFragment();
@@ -200,7 +198,8 @@ public class GraphDetailFragment extends Fragment {
     }
 
     /**
-     * Updates the data this Fragment displays from the TimeCardManager.
+     * Updates the data this {@code Fragment} displays from the {@code TimeCardManager} and
+     * {@code ScreenCountDatabase}.
      */
     public void update() {
         cache.data = countDatabase.getEntries(card.interval, card.backCount);

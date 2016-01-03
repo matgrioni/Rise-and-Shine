@@ -13,8 +13,8 @@ import models.TimeInterval;
 import services.ScreenCountService;
 
 /**
- * @author - Matias Grioni
- * @created - 12/16/14
+ * @author Matias Grioni
+ * @created 12/16/14
  *
  * Access to the database that keeps track of the screen wakes per hour, day, week, and month. Given
  * a TimeInterval and how far back to go, the ScreenCountDatabase instance can return the list of
@@ -43,8 +43,8 @@ public class ScreenCountDatabase {
     /**
      * Create a new instance or get the already created instance for ScreenCountDatabase.
      *
-     * @param context - The Context to create the ScreenCountDatabase instance with.
-     * @return - The ScreenCountDatabase instance.
+     * @param context The Context to create the ScreenCountDatabase instance with.
+     * @return The ScreenCountDatabase instance.
      */
     public static ScreenCountDatabase getInstance(Context context) {
         if(instance == null)
@@ -57,7 +57,7 @@ public class ScreenCountDatabase {
      * Creates a new ScreenCountDatabase object. To access the global instance use the
      * getInstance method.
      *
-     * @param context - The Context to create the database object with.
+     * @param context The Context to create the database object with.
      */
     private ScreenCountDatabase(Context context) {
         tcHelper = new TimeCounterHelper(context);
@@ -67,7 +67,7 @@ public class ScreenCountDatabase {
      * Should be called before any data retrieval or modifications to the database. Opens the
      * database.
      *
-     * @throws SQLException - If the database can not be opened for writing.
+     * @throws SQLException If the database can not be opened for writing.
      */
     public void open() throws SQLException {
         database = tcHelper.getWritableDatabase();
@@ -96,7 +96,7 @@ public class ScreenCountDatabase {
      *
      * Handles all the logic behind moving up in the table based on one more hour being added.
      *
-     * @param hourCount - The number of screen wakes in the last hour to put in the table.
+     * @param hourCount The number of screen wakes in the last hour to put in the table.
      */
     public void addHour(int hourCount) {
         ContentValues values = new ContentValues();
@@ -145,9 +145,9 @@ public class ScreenCountDatabase {
      * Queries the corresponding TimeInterval and sums the last {@code backCount} entries in that table.
      * Result is equivalent to summing the items in the list from getEntries.
      *
-     * @param interval - The TimeInterval whose corresponding table to query for the entries.
-     * @param backCount - How far back to go in the table including the current entry.
-     * @return - The sum of all the selected entries in the table for the TimeInterval.
+     * @param interval The TimeInterval whose corresponding table to query for the entries.
+     * @param backCount How far back to go in the table including the current entry.
+     * @return The sum of all the selected entries in the table for the TimeInterval.
      */
     public int getCount(TimeInterval interval, int backCount) {
         if(backCount == 1) {
@@ -183,9 +183,9 @@ public class ScreenCountDatabase {
      * TimeInterval. Returns a list of all the entries for that TimeInterval, with the item order
      * being chronological. The last point is the current entry.
      *
-     * @param interval - The TimeInterval whose corresponding table to query.
-     * @param backCount - How far back to go in the table including the current entry.
-     * @return - A list of the entries with a length of backCount corresponding to the table for
+     * @param interval The TimeInterval whose corresponding table to query.
+     * @param backCount How far back to go in the table including the current entry.
+     * @return A list of the entries with a length of backCount corresponding to the table for
      *         TimeInterval.
      */
     public List<Integer> getEntries(TimeInterval interval, int backCount) {
@@ -220,8 +220,8 @@ public class ScreenCountDatabase {
     /**
      * Gets the current screen wake count for the desired interval.
      *
-     * @param interval - The TimeInterval to find the current screen wake count for.
-     * @return - The current screen wake count for a given TimeInterval.
+     * @param interval The TimeInterval to find the current screen wake count for.
+     * @return The current screen wake count for a given TimeInterval.
      */
     private int currentIntervalCount(TimeInterval interval) {
         // Sum up the current TimeInterval. If we want the hour points, then the last hour is only
@@ -246,9 +246,9 @@ public class ScreenCountDatabase {
      * Gives a cursor that queries the table for the given TimeInterval starting from the row with
      * an id of start until the end of the table.
      *
-     * @param interval - The TimeInterval whose corresponding table to query.
-     * @param start - The id of the first row in the cursor. 1 is the first possible value.
-     * @return - The cursor object that will transverse rows in the table for the TimeInterval from
+     * @param interval The TimeInterval whose corresponding table to query.
+     * @param start The id of the first row in the cursor. 1 is the first possible value.
+     * @return The cursor object that will transverse rows in the table for the TimeInterval from
      *         the row with an id of start to the last entry.
      */
     private Cursor getEntriesCursor(TimeInterval interval, int start) {
@@ -266,9 +266,9 @@ public class ScreenCountDatabase {
      * include the current hour/day/month figure, only what has already been written to the database
      * and is not currently happening. This is more a convenience method
      *
-     * @param interval - The TimeInterval whose corresponding table to query.
-     * @param backCount - How far back to go in the table not including the current entry.
-     * @return - The sum of the desired entries.
+     * @param interval The TimeInterval whose corresponding table to query.
+     * @param backCount How far back to go in the table not including the current entry.
+     * @return The sum of the desired entries.
      */
     private int sumIntervalEntries(TimeInterval interval, int backCount) {
         int entryCount = getEntryCount(interval);
@@ -290,9 +290,9 @@ public class ScreenCountDatabase {
     /**
      * Sums all the entries for the provided TimeInterval.
      *
-     * @param interval - The TimeInterval for which to sum all the entries in the corresponding
+     * @param interval The TimeInterval for which to sum all the entries in the corresponding
      *                 table.
-     * @return - The sum of all the entries in the corresponding table for the TimeInterval.
+     * @return The sum of all the entries in the corresponding table for the TimeInterval.
      */
     private int sumIntervalEntries(TimeInterval interval) {
         return sumIntervalEntries(interval, getEntryCount(interval));
@@ -302,8 +302,8 @@ public class ScreenCountDatabase {
      * Adds the provided ContentValues to the table for the TimeInterval. If the table is cyclical
      * then the row will be overwritten when needed, for example with the hour table.
      *
-     * @param interval - The table to update.
-     * @param values - The ContentValues object which has the amount of wakes to add to the table.
+     * @param interval The table to update.
+     * @param values The ContentValues object which has the amount of wakes to add to the table.
      */
     private void updateTable(TimeInterval interval, ContentValues values) {
         String table = getTableName(interval);
@@ -317,8 +317,8 @@ public class ScreenCountDatabase {
     /**
      * Given a TimeInterval, returns the table name corresponding to it.
      *
-     * @param interval - The TimeInterval to get the table name for.
-     * @return - A string of the table name in the database.
+     * @param interval The TimeInterval to get the table name for.
+     * @return A string of the table name in the database.
      */
     private String getTableName(TimeInterval interval) {
         if(interval == TimeInterval.Hour)
@@ -340,8 +340,8 @@ public class ScreenCountDatabase {
      * passed in the current day. Just a wrapper around getting hourSize, weekSize, etc, based on
      * the TimeInterval.
      *
-     * @param interval - The TimeInterval to get the entry counts for.
-     * @return - The amount of relevant entries for that TimeInterval.
+     * @param interval The TimeInterval to get the entry counts for.
+     * @return The amount of relevant entries for that TimeInterval.
      */
     private int getEntryCount(TimeInterval interval) {
         if(interval == TimeInterval.Hour)
@@ -360,8 +360,8 @@ public class ScreenCountDatabase {
      * Gets the table size for the provided table name by querying all rows and counting how many
      * matched.
      *
-     * @param tableName - The table to get the size of.
-     * @return - The size of the table.
+     * @param tableName The table to get the size of.
+     * @return The size of the table.
      */
     private int queryTableSize(String tableName) {
         Cursor cursor = database.query(tableName, columns, null, null, null, null, null);
@@ -374,8 +374,8 @@ public class ScreenCountDatabase {
     /**
      * Returns the conversion factor between a TimeInterval and it's next smallest unit.
      *
-     * @param interval - The TimeInterval to convert.
-     * @return - The conversion answer between the TimeInterval and the next smallest TimeInterval.
+     * @param interval The TimeInterval to convert.
+     * @return The conversion answer between the TimeInterval and the next smallest TimeInterval.
      */
     private int convertSingleton(TimeInterval interval) {
         if(interval == TimeInterval.Day)
