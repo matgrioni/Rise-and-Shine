@@ -7,6 +7,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.IBinder;
@@ -23,6 +24,7 @@ import android.widget.TextView;
 
 import models.TimeCard;
 import models.TimeCardCache;
+import models.TimeInterval;
 import services.ScreenCountService;
 import services.ScreenCountWriteService;
 import services.ServiceUpdateListener;
@@ -134,7 +136,7 @@ public class MainActivity extends AppCompatActivity implements
     private GraphDetailFragment graphDetails;
     private SettingsFragment settings;
 
-    private boolean timerFinished = true;
+    private boolean timerFinished;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -152,6 +154,7 @@ public class MainActivity extends AppCompatActivity implements
             setSupportActionBar(toolbar);
 
         setupFragments();
+        setupFirstCards();
 
         hourCount = (TextView) findViewById(R.id.hour_count);
         countdown = (TextView) findViewById(R.id.countdown);
@@ -160,6 +163,8 @@ public class MainActivity extends AppCompatActivity implements
         fab.setOnClickListener(onAddCard);
         fabIn = AnimationUtils.loadAnimation(this, android.R.anim.slide_in_left);
         fabOut = AnimationUtils.loadAnimation(this, android.R.anim.slide_out_right);
+
+        timerFinished = true;
     }
 
     @Override
@@ -228,8 +233,9 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     /**
+     * Updates the second tier of the action bar where the current hour count and countdown timer is.
      *
-     * @param count
+     * @param count The current count for the hour.
      */
     private void updateInfo(int count) {
         hourCount.setText(Integer.toString(count));
@@ -301,7 +307,9 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     /**
-     *
+     * Pops the last {@code Fragment} off the back stack and does miscellaneous other tasks needed
+     * when this is done such as, bringing back the {@code FloatingActionButton}, changing the
+     * action bar, and updating the {@code TimeCardsFragment} and {@code FragmentState}.
      */
     private void popBackStack() {
         getFragmentManager().popBackStack();
@@ -316,9 +324,12 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     /**
+     * Adds a {@code Fragment} to the {@code FrameLayout} with the id R.id.time_cards_container.
+     * The method also hides the {@code FloatingActionButton}, and adds up navigation to the action
+     * bar.
      *
-     * @param f
-     * @param tag
+     * @param f The {@code Fragment} to add.
+     * @param tag The tag to add the {@code Fragment} with.
      */
     private void addToBackStack(Fragment f, String tag, FragmentState newState) {
         FragmentTransaction transaction = getFragmentManager().beginTransaction();
@@ -332,5 +343,29 @@ public class MainActivity extends AppCompatActivity implements
         fab.setVisibility(View.GONE);
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+    }
+
+    /**
+     * Setup the first {@code TimeCard}s if they have not yet been added. This is only useful the
+     * first time the app is launched. Otherwise, the initialization has already occurred and no
+     * more {@code TimeCard}s are added.
+     */
+    private void setupFirstCards() {
+        TimeCardsManager cardsManager = ((InstanceApplication) getApplication()).getCardsManager();
+
+        SharedPreferences sharedPreferences = getSharedPreferences(getString(R.string.shared_preference_file), Context.MODE_PRIVATE);
+        boolean init = sharedPreferences.getBoolean(getString(R.string.cards_init), false);
+
+        // If this is the first time the program is run, then init will be false, the default value,
+        // since no value for cards_init has been written yet. Then the 3 default cards will be added.
+        if(!init) {
+            cardsManager.addCard(new TimeCard(TimeInterval.Day, 1));
+            cardsManager.addCard(new TimeCard(TimeInterval.Week, 1));
+            cardsManager.addCard(new TimeCard(TimeInterval.Month, 1));
+
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putBoolean(getString(R.string.cards_init), true);
+            editor.apply();
+        }
     }
 }

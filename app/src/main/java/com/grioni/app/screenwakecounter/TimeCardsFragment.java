@@ -26,12 +26,29 @@ import models.TimeCardCache;
 import models.TimeInterval;
 
 /**
- * @author - Matias Grioni
- * @created - 1/2/15
+ * @author Matias Grioni
+ * @created 1/2/15
+ *
+ * The Fragment that has the {@code TimeCard}s displayed to the user. A {@code TimeCard} will show
+ * the counts for that given {@code TimeInterval} and back count, along with an expandable
+ * {@code GraphView}.
  */
 public class TimeCardsFragment extends Fragment {
 
+    /**
+     * @author Matias Grioni
+     * @created 1/2/16
+     *
+     * An interface for when a card clicked. This allows the host {@code Activity} to get notice
+     * of when an item in this {@code Fragment} is clicked.
+     */
     public interface OnCardClickedListener {
+        /**
+         * Called when an item in this {@code Fragment} is clicked.
+         *
+         * @param card The {@code card} that was clicked.
+         * @param cardCache The associated {@code TimeCardCache} data associated with this card.
+         */
         void onCardClicked(TimeCard card, TimeCardCache cardCache);
     }
 
@@ -93,8 +110,6 @@ public class TimeCardsFragment extends Fragment {
         cardsManager = ((InstanceApplication) getActivity().getApplicationContext()).getCardsManager();
         countDatabase = ((InstanceApplication) getActivity().getApplicationContext()).getCountDatabase();
 
-        setupFirstCards();
-
         cache = new HashMap<>();
         for(TimeCard card : cardsManager.getCards()) {
             List<Integer> counts = countDatabase.getEntries(card.interval, card.backCount);
@@ -142,24 +157,4 @@ public class TimeCardsFragment extends Fragment {
         cardsAdapter.update(cardsManager.getCards(), cache);
     }
 
-    /**
-     *
-     */
-    private void setupFirstCards() {
-        SharedPreferences sharedPreferences = getActivity()
-                .getSharedPreferences(getString(R.string.shared_preference_file), Context.MODE_PRIVATE);
-        boolean init = sharedPreferences.getBoolean(getString(R.string.cards_init), false);
-
-        // If this is the first time the program is run, then init will be false, the default value,
-        // since no value for cards_init has been written yet. Then the 3 default cards will be added.
-        if(!init) {
-            cardsManager.addCard(new TimeCard(TimeInterval.Day, 1));
-            cardsManager.addCard(new TimeCard(TimeInterval.Week, 1));
-            cardsManager.addCard(new TimeCard(TimeInterval.Month, 1));
-
-            SharedPreferences.Editor editor = sharedPreferences.edit();
-            editor.putBoolean(getString(R.string.cards_init), true);
-            editor.apply();
-        }
-    }
 }

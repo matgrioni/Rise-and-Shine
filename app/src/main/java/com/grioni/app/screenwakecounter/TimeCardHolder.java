@@ -106,11 +106,6 @@ public class TimeCardHolder extends RecyclerView.ViewHolder {
             }
         });
 
-        if (card.collapsed)
-            action.setImageResource(R.drawable.card_expand);
-        else
-            action.setImageResource(R.drawable.card_collapse);
-
         action.setOnClickListener(actionClicked);
         options.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -163,19 +158,18 @@ public class TimeCardHolder extends RecyclerView.ViewHolder {
         graph.setAxis(axis);
         graph.setData(cache.data);
 
+        ViewGroup.MarginLayoutParams params =
+                (ViewGroup.MarginLayoutParams) graph.getLayoutParams();
         if(!card.collapsed) {
-            ViewGroup.MarginLayoutParams params =
-                    (ViewGroup.MarginLayoutParams) graph.getLayoutParams();
+            action.setImageResource(R.drawable.card_collapse);
             params.bottomMargin = 0;
-            graph.setLayoutParams(params);
         } else {
             // Do the opposite check even though the xml layout defines the negative margin as such.
             // This is because views are recycled.
-            ViewGroup.MarginLayoutParams params =
-                    (ViewGroup.MarginLayoutParams) graph.getLayoutParams();
+            action.setImageResource(R.drawable.card_expand);
             params.bottomMargin = baseContext.getResources().getDimensionPixelSize(R.dimen.graph_margin_bottom);
-            graph.setLayoutParams(params);
         }
+        graph.setLayoutParams(params);
 
         setListeners();
     }
