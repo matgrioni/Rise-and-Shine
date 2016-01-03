@@ -3,12 +3,10 @@ package com.grioni.app.screenwakecounter;
 import android.content.Context;
 import android.content.Intent;
 import android.support.v7.widget.RecyclerView;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.widget.ImageView;
-import android.widget.PopupMenu;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -65,9 +63,7 @@ public class TimeCardHolder extends RecyclerView.ViewHolder {
     public GraphView graph;
 
     public ImageView action;
-    public ImageView options;
-
-    public PopupMenu popupMenu;
+    public ImageView share;
 
     private TimeCard card;
     private TimeCardCache cache;
@@ -83,10 +79,7 @@ public class TimeCardHolder extends RecyclerView.ViewHolder {
         graph = (GraphView) parent.findViewById(R.id.graph);
 
         action = (ImageView) parent.findViewById(R.id.card_action);
-        options = (ImageView) parent.findViewById(R.id.card_options);
-
-        popupMenu = new PopupMenu(parent.getContext(), options);
-        popupMenu.inflate(R.menu.card_options);
+        share = (ImageView) parent.findViewById(R.id.card_options);
 
         baseContext = parent.getContext();
     }
@@ -107,35 +100,22 @@ public class TimeCardHolder extends RecyclerView.ViewHolder {
         });
 
         action.setOnClickListener(actionClicked);
-        options.setOnClickListener(new View.OnClickListener() {
+
+        share.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                popupMenu.show();
-            }
-        });
+                String shareText = "Screen was turned on " + cache.count + " times in the last ";
+                if (card.backCount == 1)
+                    shareText += card.interval.name().toLowerCase();
+                else
+                    shareText += card.backCount + " " + card.interval.name().toLowerCase() + "s";
 
-        popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
-            @Override
-            public boolean onMenuItemClick(MenuItem item) {
-                switch(item.getItemId()) {
-                    case R.id.card_share:
-                        String shareText = "Screen was turned on " + cache.count + " times in the last ";
-                        if(card.backCount == 1)
-                            shareText += card.interval.name().toLowerCase();
-                        else
-                            shareText += card.backCount + " " + card.interval.name().toLowerCase() + "s";
-
-                        Intent shareIntent = new Intent();
-                        shareIntent.setAction(Intent.ACTION_SEND);
-                        shareIntent.putExtra(Intent.EXTRA_TEXT, shareText);
-                        shareIntent.setType("text/plain");
-                        baseContext.startActivity(Intent.createChooser(shareIntent,
-                                baseContext.getResources().getString(R.string.share_count)));
-
-                        return true;
-                }
-
-                return false;
+                Intent shareIntent = new Intent();
+                shareIntent.setAction(Intent.ACTION_SEND);
+                shareIntent.putExtra(Intent.EXTRA_TEXT, shareText);
+                shareIntent.setType("text/plain");
+                baseContext.startActivity(Intent.createChooser(shareIntent,
+                        baseContext.getResources().getString(R.string.share_count)));
             }
         });
     }

@@ -50,10 +50,10 @@
         android:id="@+id/card_options"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentRight="true"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="true"
         android:paddingTop="@dimen/time_card_overflow_padding_vertical"
         android:contentDescription="@string/card_options_desc"
-        android:src="@drawable/overflow"/>
+        android:src="@drawable/ic_share"/>
 
 </RelativeLayout>
