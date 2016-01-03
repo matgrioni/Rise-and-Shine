@@ -8,6 +8,7 @@ import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.design.widget.Snackbar;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -77,8 +78,12 @@ public class AddCardDialogFragment extends DialogFragment {
 
                     // Add the card to the model, and notify the listener the
                     // card was added. THe card has not been queried yet.
-                    cardsManager.addCard(card);
-                    cardAddedListener.onCardAdded(card);
+                    if (!cardsManager.existsCard(card)) {
+                        cardsManager.addCard(card);
+                        cardAddedListener.onCardAdded(card);
+                    } else {
+                        Toast.makeText(getActivity(), "This card already exists", Toast.LENGTH_LONG).show();
+                    }
                 } catch (NumberFormatException ex) {
                     ex.printStackTrace();
                     Toast.makeText(getActivity(), backCountStr + " is too large",
@@ -96,6 +101,8 @@ public class AddCardDialogFragment extends DialogFragment {
 
     private EditText backCountView;
     private Spinner cardTypeView;
+
+    private View snackbarView;
 
     @Override
     public void onAttach(Activity activity) {

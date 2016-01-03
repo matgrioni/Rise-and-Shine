@@ -166,6 +166,27 @@ public class TimeCardsManager {
     }
 
     /**
+     * Checks whether the given card exists in the current list of cards. This does not check for
+     * id equality.
+     *
+     * @param card
+     * @return
+     */
+    public boolean existsCard(TimeCard card) {
+        boolean found = false;
+
+        int i = 0;
+        while (i < cards.size() && !found) {
+            TimeCard cur = cards.get(i);
+            found = equalTimeCardsNoIDOrCollapsed(card, cur);
+
+            i++;
+        }
+
+        return found;
+    }
+
+    /**
      * The list of TimeCards.
      *
      * @return - The list of TimeCards.
@@ -233,5 +254,21 @@ public class TimeCardsManager {
         }
 
         return pos;
+    }
+
+    /**
+     *
+     * @param card1
+     * @param card2
+     * @return
+     */
+    private boolean equalTimeCardsNoIDOrCollapsed(TimeCard card1, TimeCard card2) {
+        if (card1 == card2)
+            return true;
+
+        if (card1 == null || card2 == null)
+            return false;
+
+        return card1.backCount == card2.backCount && card1.interval == card2.interval;
     }
 }
