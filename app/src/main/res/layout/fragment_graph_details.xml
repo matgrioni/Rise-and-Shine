@@ -2,6 +2,7 @@
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:graphview="http://schemas.android.com/apk/res-auto"
+    xmlns:ltv="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/graph_details_background"
@@ -18,6 +19,23 @@
         graphview:textSize="@dimen/graph_text_size"
         graphview:lineColor="@color/graph_line_color"
         graphview:shadeColor="@color/graph_shade_color"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical" >
+        <views.LabeledTextView
+            android:id="@+id/graph_average"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            ltv:label="@string/graph_average_label" />
+
+        <views.LabeledTextView
+            android:id="@+id/graph_stdev"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            ltv:label="@string/graph_stdev_label" />
+    </LinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"

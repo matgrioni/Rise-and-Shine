@@ -41,6 +41,9 @@
 
     <string name="time_card_expand">time_card_expand</string>
 
+    <string name="graph_average_label">Average: </string>
+    <string name="graph_stdev_label">St. Dev: </string>
+
     <string-array name="intervals">
         <item>Hour</item>
         <item>Day</item>

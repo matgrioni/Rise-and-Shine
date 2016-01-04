@@ -15,6 +15,8 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.text.DecimalFormat;
+
 import models.TimeCard;
 import models.TimeCardCache;
 import models.TimeInterval;
@@ -58,6 +60,8 @@ public class GraphDetailFragment extends Fragment {
     private OnCardDeletedListener cardDeletedListener;
 
     private ActionBar actionBar;
+    private TextView average;
+    private TextView stdev;
     private GraphView graph;
     private String axis;
     private IndexedAdapter<Integer> graphDetailAdapter;
@@ -151,6 +155,11 @@ public class GraphDetailFragment extends Fragment {
         graph.setAxis(axis);
         graph.setData(cache.data);
 
+        average = (TextView) detailView.findViewById(R.id.graph_average);
+        stdev = (TextView) detailView.findViewById(R.id.graph_stdev);
+
+        updateStats();
+
         TextView indexHeader = (TextView) detailView.findViewById(R.id.column_index_header);
         indexHeader.setText(axis);
 
@@ -205,6 +214,8 @@ public class GraphDetailFragment extends Fragment {
         cache.data = countDatabase.getEntries(card.interval, card.backCount);
         cache.count = DataUtils.sum(cache.data);
 
+        updateStats();
+
         // Redraw the graph after updating its data
         graphDetailAdapter.setData(cache.data);
         graph.setData(cache.data);
@@ -248,5 +259,16 @@ public class GraphDetailFragment extends Fragment {
         }
 
         return next;
+    }
+
+    /**
+     * Updates the stats section of this {@code Fragment} with 2 decimal places of precision.
+     */
+    private void updateStats() {
+        double averageComp = ((int) (DataUtils.average(cache.data) * 1000)) / 1000.d;
+        double stdevComp = ((int) (DataUtils.stdev(cache.data) * 1000)) / 1000.d;
+
+        average.setText(Double.toString(averageComp));
+        stdev.setText(Double.toString(stdevComp));
     }
 }
