@@ -32,7 +32,8 @@
     <dimen name="graph_margin_bottom">-180dp</dimen>
     <dimen name="graph_stats_text_size">18sp</dimen>
     <dimen name="graph_stats_padding_horizontal">15dp</dimen>
-    <dimen name="graph_stats_padding_vertical">4dp</dimen>
+    <dimen name="graph_stats_padding_vertical">10dp</dimen>
+    <dimen name="graph_stats_label_padding">10dp</dimen>
 
     <dimen name="dialog_spinner_item_text">14sp</dimen>
     <dimen name="dialog_spinner_item_padding">5dp</dimen>

@@ -10,8 +10,4 @@
         <attr name="lineColor" format="color|reference"/>
         <attr name="shadeColor" format="color|reference"/>
     </declare-styleable>
-
-    <declare-styleable name="LabeledTextView">
-        <attr name="label" format="string|reference"/>
-    </declare-styleable>
 </resources>

@@ -2,7 +2,6 @@
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:graphview="http://schemas.android.com/apk/res-auto"
-    xmlns:ltv="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/graph_details_background"
@@ -20,31 +19,58 @@
         graphview:lineColor="@color/graph_line_color"
         graphview:shadeColor="@color/graph_shade_color"/>
 
-    <LinearLayout
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingStart="@dimen/graph_stats_padding_horizontal"
         android:paddingEnd="@dimen/graph_stats_padding_horizontal"
+        android:paddingTop="@dimen/graph_stats_padding_vertical"
+        android:paddingBottom="@dimen/graph_stats_padding_vertical"
         android:background="@color/graph_stats_background"
-        android:orientation="vertical" >
-        <views.LabeledTextView
-            android:id="@+id/graph_average"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textSize="@dimen/graph_stats_text_size"
-            android:textColor="@color/graph_stats_text_color"
-            android:paddingBottom="@dimen/graph_stats_padding_vertical"
-            ltv:label="@string/graph_average_label" />
+        android:orientation="horizontal" >
 
-        <views.LabeledTextView
-            android:id="@+id/graph_stdev"
-            android:layout_width="match_parent"
+        <LinearLayout
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="@dimen/graph_stats_text_size"
-            android:textColor="@color/graph_stats_text_color"
-            android:paddingBottom="@dimen/graph_stats_padding_vertical"
-            ltv:label="@string/graph_stdev_label" />
-    </LinearLayout>
+            android:layout_alignParentStart="true"
+            android:orientation="horizontal">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingEnd="@dimen/graph_stats_label_padding"
+                android:text="@string/graph_average_label"
+                android:textSize="@dimen/graph_stats_text_size"
+                android:textColor="@color/graph_stats_text_color"/>
+
+            <TextView
+                android:id="@+id/graph_average"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="@dimen/graph_stats_text_size"
+                android:textColor="@color/graph_stats_text_color"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:orientation="horizontal">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingEnd="@dimen/graph_stats_label_padding"
+                android:text="@string/graph_stdev_label"
+                android:textSize="@dimen/graph_stats_text_size"
+                android:textColor="@color/graph_stats_text_color"/>
+
+            <TextView
+                android:id="@+id/graph_stdev"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="@dimen/graph_stats_text_size"
+                android:textColor="@color/graph_stats_text_color" />
+        </LinearLayout>
+    </RelativeLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
