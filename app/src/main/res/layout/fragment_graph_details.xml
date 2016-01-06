@@ -23,17 +23,26 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:paddingStart="@dimen/graph_stats_padding_horizontal"
+        android:paddingEnd="@dimen/graph_stats_padding_horizontal"
+        android:background="@color/graph_stats_background"
         android:orientation="vertical" >
         <views.LabeledTextView
             android:id="@+id/graph_average"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:textSize="@dimen/graph_stats_text_size"
+            android:textColor="@color/graph_stats_text_color"
+            android:paddingBottom="@dimen/graph_stats_padding_vertical"
             ltv:label="@string/graph_average_label" />
 
         <views.LabeledTextView
             android:id="@+id/graph_stdev"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:textSize="@dimen/graph_stats_text_size"
+            android:textColor="@color/graph_stats_text_color"
+            android:paddingBottom="@dimen/graph_stats_padding_vertical"
             ltv:label="@string/graph_stdev_label" />
     </LinearLayout>
 

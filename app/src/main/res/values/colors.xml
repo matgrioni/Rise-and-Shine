@@ -16,6 +16,8 @@
     <color name="graph_line_color">#e040fb</color>
     <color name="graph_shade_color">#2d0277bd</color>
     <color name="graph_details_background">#eceff1</color>
+    <color name="graph_stats_background">#ffffff</color>
+    <color name="graph_stats_text_color">#8a000000</color>
 
     <color name="material_spinner_pressed">#4d0277bd</color>
     <color name="material_spinner_focused">#190277bd</color>
