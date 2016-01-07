@@ -1,8 +1,10 @@
-package com.grioni.app.screenwakecounter;
+package views;
 
+import android.net.LinkAddress;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.Transformation;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 
 /**
@@ -11,7 +13,7 @@ import android.widget.RelativeLayout;
  *
  * The animation to collapse and expand the TimeCard.
  */
-public class GraphCollapseAnimation extends Animation {
+class ToggleViewAnimation extends Animation {
     private boolean alreadyEnded;
 
     private View animatedView;
@@ -25,10 +27,11 @@ public class GraphCollapseAnimation extends Animation {
     /**
      * Create the animation to collapse and expand the TimeCard.
      *
-     * @param view - The view to animate.
+     * @param view     - The view to animate.
      * @param duration - The duration of the animation.
+     * @param originalMargin
      */
-    public GraphCollapseAnimation(View view, int duration) {
+    public ToggleViewAnimation(View view, int duration, int originalMargin) {
         setDuration(duration);
 
         animatedView = view;
@@ -39,7 +42,7 @@ public class GraphCollapseAnimation extends Animation {
         // least positive or 0 then we end the margin animation once the entire
         // height is covered by the margin.
         marginStart = layoutParams.bottomMargin;
-        marginEnd = (marginStart < 0) ? 0 : (-1 * view.getHeight());
+        marginEnd = (marginStart < originalMargin) ? originalMargin : (-1 * view.getHeight());
     }
 
     @Override
@@ -49,10 +52,10 @@ public class GraphCollapseAnimation extends Animation {
         // If the animation is still ongoing then move the margins as necessary.
         // Once the animation has ended ensure the interpolatedTime did the
         // right thing and got the margin to the end.
-        if(interpolatedTime < 1.0f) {
+        if (interpolatedTime < 1.0f) {
             layoutParams.bottomMargin = marginStart + (int) ((marginEnd - marginStart) * interpolatedTime);
             animatedView.requestLayout();
-        } else if(!alreadyEnded) {
+        } else if (!alreadyEnded) {
             layoutParams.bottomMargin = marginEnd;
             animatedView.requestLayout();
 
@@ -60,3 +63,4 @@ public class GraphCollapseAnimation extends Animation {
         }
     }
 }
+

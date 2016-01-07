@@ -7,6 +7,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -15,44 +16,29 @@ import models.TimeCardCache;
 import models.TimeInterval;
 import utils.LabelUtils;
 import views.GraphView;
+import views.ToggleableView;
 
 /**
  * Created by Matias Grioni on 1/15/15.
  */
 public class TimeCardHolder extends RecyclerView.ViewHolder {
-    private Animation.AnimationListener graphAnimListener = new Animation.AnimationListener() {
+    private ToggleableView.OnToggleListener toggleListener = new ToggleableView.OnToggleListener() {
         @Override
-        public void onAnimationStart(Animation animation) {
-
-        }
-
-        @Override
-        public void onAnimationEnd(Animation animation) {
+        public void onToggle(View v, boolean isCollapsed) {
             cardEventListener.onCardStateChanged(card.id);
-        }
-
-        @Override
-        public void onAnimationRepeat(Animation animation) {
-
         }
     };
 
     private View.OnClickListener actionClicked = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-            View cardView = (View) v.getParent();
-            GraphView graph = (GraphView) cardView.findViewById(R.id.graph);
-
-            RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams) graph.getLayoutParams();
-
-            if (layoutParams.bottomMargin == 0)
+            /*if (!toggleableView.isCollapsed()) {
                 ((ImageView) v).setImageResource(R.drawable.card_expand);
-            else if(layoutParams.bottomMargin < 0)
+            }
+            else
                 ((ImageView) v).setImageResource(R.drawable.card_collapse);
 
-            GraphCollapseAnimation animation = new GraphCollapseAnimation(graph, 500);
-            animation.setAnimationListener(graphAnimListener);
-            graph.startAnimation(animation);
+            toggleableView.toggle();*/
         }
     };
 
@@ -60,6 +46,9 @@ public class TimeCardHolder extends RecyclerView.ViewHolder {
     private TimeCardEventListener cardEventListener;
 
     public TextView title;
+
+    public LinearLayout toggleableView;
+    public TextView noData;
     public GraphView graph;
 
     public ImageView action;
@@ -76,6 +65,9 @@ public class TimeCardHolder extends RecyclerView.ViewHolder {
         super(parent);
 
         title = (TextView) parent.findViewById(R.id.interval_count);
+
+        toggleableView = (LinearLayout) parent.findViewById(R.id.toggleable_data);//(ToggleableView) parent.findViewById(R.id.toggleable_data);
+        noData = (TextView) parent.findViewById(R.id.no_data_display);
         graph = (GraphView) parent.findViewById(R.id.graph);
 
         action = (ImageView) parent.findViewById(R.id.card_action);
@@ -99,6 +91,7 @@ public class TimeCardHolder extends RecyclerView.ViewHolder {
             }
         });
 
+        //toggleableView.setOnToggleListener(toggleListener);
         action.setOnClickListener(actionClicked);
 
         share.setOnClickListener(new View.OnClickListener() {
@@ -138,18 +131,21 @@ public class TimeCardHolder extends RecyclerView.ViewHolder {
         graph.setAxis(axis);
         graph.setData(cache.data);
 
-        ViewGroup.MarginLayoutParams params =
-                (ViewGroup.MarginLayoutParams) graph.getLayoutParams();
         if(!card.collapsed) {
             action.setImageResource(R.drawable.card_collapse);
-            params.bottomMargin = 0;
         } else {
             // Do the opposite check even though the xml layout defines the negative margin as such.
             // This is because views are recycled.
             action.setImageResource(R.drawable.card_expand);
-            params.bottomMargin = baseContext.getResources().getDimensionPixelSize(R.dimen.graph_margin_bottom);
         }
-        graph.setLayoutParams(params);
+
+        if (graph.empty()) {
+            noData.setVisibility(View.VISIBLE);
+            graph.setVisibility(View.GONE);
+        } else {
+            noData.setVisibility(View.GONE);
+            graph.setVisibility(View.VISIBLE);
+        }
 
         setListeners();
     }

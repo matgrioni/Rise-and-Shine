@@ -10,4 +10,8 @@
         <attr name="lineColor" format="color|reference"/>
         <attr name="shadeColor" format="color|reference"/>
     </declare-styleable>
+
+    <declare-styleable name="ToggleableView">
+        <attr name="collapsed" format="boolean"/>
+    </declare-styleable>
 </resources>

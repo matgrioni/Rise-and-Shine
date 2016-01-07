@@ -11,6 +11,7 @@
     <dimen name="hour_title_padding">17dp</dimen>
     <dimen name="time_cards_padding_horizontal">8dp</dimen>
     <dimen name="time_card_body_padding_vertical">10dp</dimen>
+    <dimen name="no_data_display_text_size">14sp</dimen>
 
     <dimen name="time_card_title_padding_vertical">7dp</dimen>
     <dimen name="time_card_title_padding_horizontal">7dp</dimen>

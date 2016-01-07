@@ -2,6 +2,7 @@
 <RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:graphview="http://schemas.android.com/apk/res-auto"
+    xmlns:toggleable="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?android:attr/selectableItemBackground">
@@ -22,16 +23,29 @@
             android:paddingLeft="@dimen/time_card_title_padding_horizontal"
             android:textAppearance="@style/TextAppearance.Medium"/>
 
-        <views.GraphView
-            android:id="@+id/graph"
-            android:layout_width="match_parent"
-            android:layout_height="@dimen/graph_height"
+        <views.ToggleableView
+            android:id="@+id/toggleable_data"
             android:layout_below="@+id/interval_count"
-            android:layout_marginBottom="@dimen/graph_margin_bottom"
-            graphview:textSize="@dimen/graph_text_size"
-            graphview:lineColor="@color/graph_line_color"
-            graphview:shadeColor="@color/graph_shade_color"
-            android:transitionName="@string/time_card_expand"/>
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+            <TextView
+                android:id="@+id/no_data_display"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_horizontal"
+                android:textSize="@dimen/no_data_display_text_size"
+                android:text="@string/no_data_display"/>
+
+            <views.GraphView
+                android:id="@+id/graph"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/graph_height"
+                graphview:textSize="@dimen/graph_text_size"
+                graphview:lineColor="@color/graph_line_color"
+                graphview:shadeColor="@color/graph_shade_color"
+                android:transitionName="@string/time_card_expand"/>
+        </views.ToggleableView>
     </RelativeLayout>
 
     <ImageView

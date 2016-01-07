@@ -40,6 +40,7 @@
     <string name="pref_notification_interval_summary">The counting interval for the notification.</string>
 
     <string name="time_card_expand">time_card_expand</string>
+    <string name="no_data_display">No data yet</string>
 
     <string name="graph_average_label">Average:</string>
     <string name="graph_stdev_label">St. Dev:</string>

@@ -285,4 +285,8 @@ public class GraphView extends View {
         nextPoint = point;
         animStartTime = SystemClock.elapsedRealtime();
     }
+
+    public boolean empty() {
+        return this.points == null || this.points.size() <= 1;
+    }
 }
