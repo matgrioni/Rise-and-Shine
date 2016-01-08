@@ -32,13 +32,13 @@ public class TimeCardHolder extends RecyclerView.ViewHolder {
     private View.OnClickListener actionClicked = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-            /*if (!toggleableView.isCollapsed()) {
+            if (!toggleableView.isCollapsed()) {
                 ((ImageView) v).setImageResource(R.drawable.card_expand);
-            }
-            else
+            } else {
                 ((ImageView) v).setImageResource(R.drawable.card_collapse);
+            }
 
-            toggleableView.toggle();*/
+            toggleableView.toggle();
         }
     };
 
@@ -47,7 +47,7 @@ public class TimeCardHolder extends RecyclerView.ViewHolder {
 
     public TextView title;
 
-    public LinearLayout toggleableView;
+    public ToggleableView toggleableView;
     public TextView noData;
     public GraphView graph;
 
@@ -66,7 +66,7 @@ public class TimeCardHolder extends RecyclerView.ViewHolder {
 
         title = (TextView) parent.findViewById(R.id.interval_count);
 
-        toggleableView = (LinearLayout) parent.findViewById(R.id.toggleable_data);//(ToggleableView) parent.findViewById(R.id.toggleable_data);
+        toggleableView = (ToggleableView) parent.findViewById(R.id.toggleable_data);
         noData = (TextView) parent.findViewById(R.id.no_data_display);
         graph = (GraphView) parent.findViewById(R.id.graph);
 
@@ -91,7 +91,7 @@ public class TimeCardHolder extends RecyclerView.ViewHolder {
             }
         });
 
-        //toggleableView.setOnToggleListener(toggleListener);
+        toggleableView.setOnToggleListener(toggleListener);
         action.setOnClickListener(actionClicked);
 
         share.setOnClickListener(new View.OnClickListener() {
@@ -131,6 +131,7 @@ public class TimeCardHolder extends RecyclerView.ViewHolder {
         graph.setAxis(axis);
         graph.setData(cache.data);
 
+        toggleableView.setCollapsed(card.collapsed);
         if(!card.collapsed) {
             action.setImageResource(R.drawable.card_collapse);
         } else {

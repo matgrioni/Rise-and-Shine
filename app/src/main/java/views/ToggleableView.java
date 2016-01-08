@@ -46,6 +46,9 @@ public class ToggleableView extends LinearLayout {
     private ToggleViewAnimation toggle;
     private boolean isCollapsed;
 
+    private boolean marginInit;
+    private int originalMargin;
+
     public ToggleableView(Context context) {
         super(context);
         init();
@@ -54,7 +57,7 @@ public class ToggleableView extends LinearLayout {
     public ToggleableView(Context context, AttributeSet attrs) {
         super(context, attrs);
         init();
-        //setupAttrs(attrs);
+        setupAttrs(attrs);
     }
 
     public ToggleableView(Context context, AttributeSet attrs, int defStyle) {
@@ -67,9 +70,9 @@ public class ToggleableView extends LinearLayout {
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
         super.onLayout(changed, l, t, r, b);
 
-        int originalBottomMargin = ((RelativeLayout.LayoutParams) getLayoutParams()).bottomMargin;
-        toggle = new ToggleViewAnimation(this, 500, originalBottomMargin);
-        toggle.setAnimationListener(animListener);
+        if (isCollapsed) {
+            ((RelativeLayout.LayoutParams) getLayoutParams()).bottomMargin = -1 * getHeight();
+        }
     }
 
     /**
@@ -77,6 +80,7 @@ public class ToggleableView extends LinearLayout {
      */
     private void init() {
         isCollapsed = false;
+        marginInit = false;
     }
 
     /**
@@ -91,10 +95,32 @@ public class ToggleableView extends LinearLayout {
         } finally {
             arr.recycle();
         }
+    }
 
-        if (isCollapsed) {
-            ((LayoutParams) getLayoutParams()).bottomMargin = -1 * getHeight();
+    /**
+     *
+     */
+    private void setupAnimation() {
+        if (!marginInit) {
+            originalMargin = ((RelativeLayout.LayoutParams) getLayoutParams()).bottomMargin;
+            marginInit = true;
         }
+
+        toggle = new ToggleViewAnimation(this, 500, 0);
+        toggle.setAnimationListener(animListener);
+    }
+
+    /**
+     *
+     * @param collapsed
+     */
+    public void setCollapsed(boolean collapsed) {
+        isCollapsed = collapsed;
+
+        if (isCollapsed)
+            hide();
+        else
+            show();
     }
 
     /**
@@ -102,10 +128,34 @@ public class ToggleableView extends LinearLayout {
      * @return
      */
     public boolean toggle() {
-        this.startAnimation(toggle);
-        isCollapsed = !isCollapsed;
+        if (isCollapsed)
+            show();
+        else
+            hide();
 
         return isCollapsed;
+    }
+
+    /**
+     *
+     * @return
+     */
+    public void show() {
+        if (isCollapsed) {
+            setupAnimation();
+            this.startAnimation(toggle);
+
+            isCollapsed = !isCollapsed;
+        }
+    }
+
+    public void hide() {
+        if (!isCollapsed) {
+            setupAnimation();
+            this.startAnimation(toggle);
+
+            isCollapsed = !isCollapsed;
+        }
     }
 
     /**
