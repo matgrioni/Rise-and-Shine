@@ -11,7 +11,8 @@
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?actionBarSize"
-        android:background="?attr/colorPrimary"/>
+        android:background="?attr/colorPrimary"
+        app:theme="@style/Toolbar.Light"/>
 
     <LinearLayout
         android:id="@+id/cur_hour_info"
