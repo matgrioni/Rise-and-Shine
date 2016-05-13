@@ -5,7 +5,7 @@ import android.app.Fragment;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.view.ActionMode;
+import android.view.ActionMode;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -16,6 +16,9 @@ import android.widget.AbsListView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import models.TimeCard;
 import models.TimeCardCache;
@@ -68,6 +71,8 @@ public class GraphDetailFragment extends Fragment {
 
     private TimeCard card;
     private TimeCardCache cache;
+
+    private List<MenuItem> menuItems;
 
     /**
      * Instantiates a new instance of this fragment type, using data from the
@@ -128,6 +133,8 @@ public class GraphDetailFragment extends Fragment {
         card = arguments.getParcelable("card");
         cache = arguments.getParcelable("cache");
 
+        menuItems = new ArrayList<>();
+
         // If this card only goes back one unit, then the axis has to break this TimeUnit into
         // smaller pieces. For example, Month -> Day, Week -> Day, Day -> Hour. Since minutes
         // are not tracked 1 hour stays 1 hour. Otherwise, if the TimeCard goes back multiple units
@@ -169,17 +176,19 @@ public class GraphDetailFragment extends Fragment {
         pointsView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE_MODAL);
         pointsView.setMultiChoiceModeListener(new AbsListView.MultiChoiceModeListener() {
             @Override
-            public void onItemCheckedStateChanged(android.view.ActionMode mode, int position, long id, boolean checked) {
-                mode.setTitle(Integer.toString(pointsView.getCheckedItemCount()));
+            public void onItemCheckedStateChanged(ActionMode mode, int position, long id, boolean checked) {
+                int checkedCount = pointsView.getCheckedItemCount();
+                mode.setTitle(Integer.toString(checkedCount));
             }
 
             @Override
-            public boolean onCreateActionMode(android.view.ActionMode mode, Menu menu) {
+            public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+                hideMenuItems();
                 return true;
             }
 
             @Override
-            public boolean onPrepareActionMode(android.view.ActionMode mode, Menu menu) {
+            public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
                 return false;
             }
 
@@ -190,7 +199,7 @@ public class GraphDetailFragment extends Fragment {
 
             @Override
             public void onDestroyActionMode(android.view.ActionMode mode) {
-
+                showMenuItems();
             }
         });
 
@@ -204,8 +213,12 @@ public class GraphDetailFragment extends Fragment {
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
-        menu.findItem(R.id.settings).setVisible(false);
         inflater.inflate(R.menu.graph_details, menu);
+        menu.removeItem(R.id.settings);
+
+        for (int i = 0; i < menu.size(); i++)
+            menuItems.add(menu.getItem(i));
+
     }
 
     @Override
@@ -297,5 +310,17 @@ public class GraphDetailFragment extends Fragment {
 
         average.setText(Double.toString(averageComp));
         stdev.setText(Double.toString(stdevComp));
+    }
+
+    private void hideMenuItems() {
+        for (int i = 0; i < menuItems.size(); i++) {
+            menuItems.get(i).setVisible(false);
+        }
+    }
+
+    private void showMenuItems() {
+        for (int i = 0; i < menuItems.size(); i++) {
+            menuItems.get(i).setVisible(true);
+        }
     }
 }
