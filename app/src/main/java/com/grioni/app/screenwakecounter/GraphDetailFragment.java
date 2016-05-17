@@ -37,7 +37,7 @@ import views.GraphView;
  * implement OnCardDeletedListener. This Fragment will delete cards when the menu
  * option is chosen from TimeCardsManager and then call the callback.
  */
-public class GraphDetailFragment extends Fragment {
+public class GraphDetailFragment extends ActionModeFragment {
     /**
      * @author - Matias Grioni
      * @created - 8/13/15
@@ -71,8 +71,6 @@ public class GraphDetailFragment extends Fragment {
 
     private TimeCard card;
     private TimeCardCache cache;
-
-    private List<MenuItem> menuItems;
 
     /**
      * Instantiates a new instance of this fragment type, using data from the
@@ -133,8 +131,6 @@ public class GraphDetailFragment extends Fragment {
         card = arguments.getParcelable("card");
         cache = arguments.getParcelable("cache");
 
-        menuItems = new ArrayList<>();
-
         // If this card only goes back one unit, then the axis has to break this TimeUnit into
         // smaller pieces. For example, Month -> Day, Week -> Day, Day -> Hour. Since minutes
         // are not tracked 1 hour stays 1 hour. Otherwise, if the TimeCard goes back multiple units
@@ -183,7 +179,7 @@ public class GraphDetailFragment extends Fragment {
 
             @Override
             public boolean onCreateActionMode(ActionMode mode, Menu menu) {
-                hideMenuItems();
+                hideMenu();
                 return true;
             }
 
@@ -199,7 +195,7 @@ public class GraphDetailFragment extends Fragment {
 
             @Override
             public void onDestroyActionMode(android.view.ActionMode mode) {
-                showMenuItems();
+                showMenu();
             }
         });
 
@@ -212,13 +208,10 @@ public class GraphDetailFragment extends Fragment {
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        super.onCreateOptionsMenu(menu, inflater);
         inflater.inflate(R.menu.graph_details, menu);
         menu.removeItem(R.id.settings);
 
-        for (int i = 0; i < menu.size(); i++)
-            menuItems.add(menu.getItem(i));
-
+        super.onCreateOptionsMenu(menu, inflater);
     }
 
     @Override
@@ -310,17 +303,5 @@ public class GraphDetailFragment extends Fragment {
 
         average.setText(Double.toString(averageComp));
         stdev.setText(Double.toString(stdevComp));
-    }
-
-    private void hideMenuItems() {
-        for (int i = 0; i < menuItems.size(); i++) {
-            menuItems.get(i).setVisible(false);
-        }
-    }
-
-    private void showMenuItems() {
-        for (int i = 0; i < menuItems.size(); i++) {
-            menuItems.get(i).setVisible(true);
-        }
     }
 }
