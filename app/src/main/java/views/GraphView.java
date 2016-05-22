@@ -7,7 +7,6 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Rect;
-import android.os.SystemClock;
 import android.util.AttributeSet;
 import android.view.View;
 
@@ -28,11 +27,11 @@ import utils.DataUtils;
 public class GraphView extends View {
     // The unscaled margin between the axis line and the edge of the view and the margin between the
     // top edge and the top of the graph.
-    private static final float UNSCALED_AXIS_MARGIN = 5;
-    private static final float UNSCALED_TOP_MARGIN = 7;
+    private static final float DEFAULT_UNSCALED_AXIS_MARGIN = 5;
 
-    private int scaledAxisMargin;
-    private int scaledTopMargin;
+    // The axis margin is the distance between the axis labels and the actual
+    // axis line.
+    private int axisMargin;
 
     private String xAxisLabel;
     private List<Integer> points;
@@ -101,15 +100,15 @@ public class GraphView extends View {
         TypedArray arr = getContext().getTheme().obtainStyledAttributes(attrs, R.styleable.GraphView, 0, 0);
         final float scale = getResources().getDisplayMetrics().density;
 
-        scaledAxisMargin = (int) (UNSCALED_AXIS_MARGIN * scale);
-        scaledTopMargin = (int) (UNSCALED_TOP_MARGIN * scale);
-
         try {
             float unscaledText = arr.getDimension(R.styleable.GraphView_textSize, 12);
             textSize = (int) (unscaledText * scale + 0.5f);
 
-            lineColor = arr.getColor(R.styleable.GraphView_lineColor, Color.BLUE);
-            shadeColor = arr.getColor(R.styleable.GraphView_shadeColor, Color.GRAY);
+            axisMargin = (int) arr.getDimension(R.styleable.GraphView_axisMargin,
+                                                DEFAULT_UNSCALED_AXIS_MARGIN * scale);
+
+            lineColor = arr.getColor(R.styleable.GraphView_lineColor, Color.BLACK);
+            shadeColor = arr.getColor(R.styleable.GraphView_shadeColor, Color.WHITE);
         } finally {
             arr.recycle();
         }
@@ -122,12 +121,10 @@ public class GraphView extends View {
         drawAxisLabels(canvas);
         drawAxes(canvas);
 
-        if(points != null) {
-            if(points.size() != 0) {
-                drawData(canvas);
-                drawShading(canvas);
-                drawSelected(canvas);
-            }
+        if(points.size() > 0) {
+            drawData(canvas);
+            drawShading(canvas);
+            drawSelected(canvas);
         }
     }
 
@@ -155,10 +152,10 @@ public class GraphView extends View {
         canvas.drawText("Views", yAxisBounds.height(), getHeight() / 2 + yAxisBounds.width() / 2, paint);
         canvas.restore();
 
-        graphStartX = yAxisBounds.height() + scaledAxisMargin;
-        graphStartY = getHeight() - xAxisBounds.height() - scaledAxisMargin;
+        graphStartX = yAxisBounds.height() + axisMargin;
+        graphStartY = getHeight() - xAxisBounds.height() - axisMargin;
 
-        graphHeight = graphStartY - scaledTopMargin;
+        graphHeight = graphStartY;
         graphWidth = getWidth() - graphStartX;
     }
 

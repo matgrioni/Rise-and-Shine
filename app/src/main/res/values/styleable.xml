@@ -6,6 +6,7 @@
     </declare-styleable>
 
     <declare-styleable name="GraphView">
+        <attr name="axisMargin" format="dimension|reference"/>
         <attr name="textSize" format="dimension|reference"/>
         <attr name="lineColor" format="color|reference"/>
         <attr name="shadeColor" format="color|reference"/>
