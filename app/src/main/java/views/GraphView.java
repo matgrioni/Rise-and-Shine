@@ -29,10 +29,6 @@ public class GraphView extends View {
     private static final float UNSCALED_AXIS_MARGIN = 5;
     private static final float UNSCALED_TOP_MARGIN = 7;
 
-    private static long POINT_ADD_ANIM_LENGTH = 250;
-    private long animStartTime = 0;
-    private int nextPoint;
-
     private int scaledAxisMargin;
     private int scaledTopMargin;
 
@@ -249,26 +245,6 @@ public class GraphView extends View {
         }
     }
 
-    /**
-     *
-     */
-    private void adjustUnits() {
-        float interpolatedTime = (SystemClock.elapsedRealtime() - animStartTime) / POINT_ADD_ANIM_LENGTH;
-
-        int endHorizontalUnitToPx = graphWidth / points.size();
-        int startHorizontalUnitToPx = graphWidth / (points.size() - 1);
-        horizontalUnitToPx = startHorizontalUnitToPx - (int) ((startHorizontalUnitToPx - endHorizontalUnitToPx)
-                * (interpolatedTime));
-
-        int nextMax = max(points);
-        if(nextPoint > nextMax)
-            nextMax = nextPoint;
-        int endVerticalUnitToPx = (nextMax == 0) ? 0 : graphHeight / nextMax;
-        int startVerticalUnitToPx = (max(points) == 0) ? 0 : graphHeight / max(points);
-        verticalUnitToPx = startVerticalUnitToPx - (int) ((startVerticalUnitToPx - endVerticalUnitToPx)
-                * (interpolatedTime));
-     }
-
     private int max(List<Integer> points) {
         int max = points.get(0);
         for(int i = 1; i < points.size(); i++)
@@ -297,15 +273,6 @@ public class GraphView extends View {
         if(points == null)
             points = new ArrayList<Integer>();
         this.points = points;
-    }
-
-    /**
-     *
-     * @param point
-     */
-    public void addPoint(int point) {
-        nextPoint = point;
-        animStartTime = SystemClock.elapsedRealtime();
     }
 
     /**
