@@ -38,6 +38,7 @@ public class GraphView extends View {
 
     private String xAxisLabel;
     private List<Integer> points;
+    private List<Integer> selected;
 
     private int textSize;
     private int graphStartX;
@@ -59,6 +60,7 @@ public class GraphView extends View {
      */
     public GraphView(Context context) {
         super(context);
+        init();
         initAttrs(null);
     }
 
@@ -70,6 +72,7 @@ public class GraphView extends View {
      */
     public GraphView(Context context, AttributeSet attrs) {
         super(context, attrs);
+        init();
         initAttrs(attrs);
     }
 
@@ -82,7 +85,12 @@ public class GraphView extends View {
      */
     public GraphView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
+        init();
         initAttrs(attrs);
+    }
+
+    private void init() {
+        selected = new ArrayList<>();
     }
 
     /**
@@ -119,6 +127,7 @@ public class GraphView extends View {
             if(points.size() != 0) {
                 drawData(canvas);
                 drawShading(canvas);
+                drawSelected(canvas);
             }
         }
     }
@@ -227,6 +236,19 @@ public class GraphView extends View {
         }
     }
 
+    private void drawSelected(Canvas canvas) {
+        Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        paint.setColor(lineColor);
+        paint.setStyle(Paint.Style.FILL);
+
+        for (int i = 0; i < selected.size(); i++) {
+            int pointIndex = selected.get(i);
+            int selectedX = graphStartX + pointIndex * horizontalUnitToPx;
+            int selectedY = (int) (points.get(pointIndex) * verticalUnitToPx);
+            canvas.drawCircle(selectedX, graphStartY - selectedY, 8, paint);
+        }
+    }
+
     /**
      *
      */
@@ -284,6 +306,36 @@ public class GraphView extends View {
     public void addPoint(int point) {
         nextPoint = point;
         animStartTime = SystemClock.elapsedRealtime();
+    }
+
+    /**
+     * Select the given point in the graph.
+     *
+     * @param pointIndex The index of the point on in the data list.
+     */
+    public void addSelected(int pointIndex) {
+        selected.add(pointIndex);
+        invalidate();
+    }
+
+    /**
+     * Deselect the given point in the graph.
+     *
+     * @param pointIndex The index of the point in the data list.
+     * @return True if the point was deselected and false otherwise.
+     */
+    public boolean removeSelected(int pointIndex) {
+        boolean result = selected.remove(Integer.valueOf(pointIndex));
+        invalidate();
+        return result;
+    }
+
+    /**
+     * Clear all selected points to non-selected.
+     */
+    public void clearSelected() {
+        selected.clear();
+        invalidate();
     }
 
     public boolean empty() {
