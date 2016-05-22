@@ -175,6 +175,11 @@ public class GraphDetailFragment extends ActionModeFragment {
             public void onItemCheckedStateChanged(ActionMode mode, int position, long id, boolean checked) {
                 int checkedCount = pointsView.getCheckedItemCount();
                 mode.setTitle(Integer.toString(checkedCount));
+
+                if (checked)
+                    graph.addSelected(position);
+                else
+                    graph.removeSelected(position);
             }
 
             @Override
@@ -196,6 +201,7 @@ public class GraphDetailFragment extends ActionModeFragment {
             @Override
             public void onDestroyActionMode(android.view.ActionMode mode) {
                 showMenu();
+                graph.clearSelected();
             }
         });
 
