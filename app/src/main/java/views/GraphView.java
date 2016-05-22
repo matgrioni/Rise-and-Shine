@@ -88,6 +88,7 @@ public class GraphView extends View {
     }
 
     private void init() {
+        points = new ArrayList<>();
         selected = new ArrayList<>();
     }
 
@@ -297,7 +298,12 @@ public class GraphView extends View {
         invalidate();
     }
 
+    /**
+     * Check if this GraphView is representing any data.
+     *
+     * @return True if there there was no data set to display. False otherwise.
+     */
     public boolean empty() {
-        return this.points == null || this.points.size() <= 1;
+        return this.points.size() == 0;
     }
 }
