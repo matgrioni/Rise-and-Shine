@@ -16,6 +16,8 @@ import com.grioni.app.screenwakecounter.R;
 import java.util.ArrayList;
 import java.util.List;
 
+import utils.DataUtils;
+
 /**
  * @author - Matias Grioni
  * @created - 12/27/14
@@ -205,7 +207,7 @@ public class GraphView extends View {
 
         // If the max is larger than the graph height, then the result of division will be zero
         // and the graph will flatline.
-        int max = max(points);
+        int max = DataUtils.max(points);
         verticalUnitToPx = (max == 0 || graphHeight < max) ?
                 (double) max / graphHeight : (double) graphHeight / max;
 
@@ -244,16 +246,6 @@ public class GraphView extends View {
             canvas.drawCircle(selectedX, graphStartY - selectedY, 8, paint);
         }
     }
-
-    private int max(List<Integer> points) {
-        int max = points.get(0);
-        for(int i = 1; i < points.size(); i++)
-            if(points.get(i) > max)
-                max = points.get(i);
-
-        return max;
-    }
-
 
     /**
      *

@@ -53,4 +53,22 @@ public class DataUtils {
 
         return Math.sqrt(sqsum / data.size());
     }
+
+    /**
+     * Finds the maximum item in a {@code Collection}. If an empty collection is given then
+     * {@code Integer.MIN_VALUE} is returned.
+     *
+     * @param data The {@code Collection} to search through.
+     * @return The maximum item in the provided {@code Collection}.
+     */
+    public static int max(Collection<Integer> data) {
+       int max = Integer.MIN_VALUE;
+
+        for(int datum : data) {
+            if (datum > max)
+                max = datum;
+        }
+
+        return max;
+    }
 }
