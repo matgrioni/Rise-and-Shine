@@ -157,8 +157,12 @@ public class GraphView extends View {
         graphWidth = getWidth() - graphStartX - getPaddingEnd();
         graphHeight = graphStartY - getPaddingTop();
 
+        // NOTE: For drawing text, the bounded rectangle around the text is not with origin in the
+        // top left corner as might be assumed. The x-axis varies within the text depending on the
+        // letters. For this reason to calculate where to draw text use the top, bottom, right, and
+        // left values of the rectangles measuring the text size.
         canvas.drawText(xAxisLabel, graphStartX + graphWidth / 2 - xAxisBounds.width() / 2,
-                graphStartY + axisMargin + xAxisBounds.height(), paint);
+                graphStartY + axisMargin - xAxisBounds.top, paint);
 
         canvas.save();
         canvas.rotate(-90.f, graphStartX - axisMargin, graphHeight / 2 + yAxisBounds.width() / 2);
