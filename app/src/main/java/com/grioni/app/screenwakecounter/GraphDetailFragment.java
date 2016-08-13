@@ -1,7 +1,6 @@
 package com.grioni.app.screenwakecounter;
 
 import android.app.Activity;
-import android.app.Fragment;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
@@ -16,9 +15,6 @@ import android.widget.AbsListView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import models.TimeCard;
 import models.TimeCardCache;
@@ -155,7 +151,7 @@ public class GraphDetailFragment extends ActionModeFragment {
         View detailView = inflater.inflate(R.layout.fragment_graph_details, container, false);
 
         graph = (GraphView) detailView.findViewById(R.id.fragment_details_graph);
-        graph.setAxis(axis);
+        graph.setXAxis(axis);
         graph.setData(cache.data);
 
         average = (TextView) detailView.findViewById(R.id.graph_average);

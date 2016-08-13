@@ -4,11 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
-import android.view.ViewGroup;
-import android.view.animation.Animation;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import models.TimeCard;
@@ -128,7 +124,7 @@ public class TimeCardHolder extends RecyclerView.ViewHolder {
                 axis = "Day";
         } else
             axis = card.interval.name();
-        graph.setAxis(axis);
+        graph.setXAxis(axis);
         graph.setData(cache.data);
 
         toggleableView.setCollapsed(card.collapsed);
