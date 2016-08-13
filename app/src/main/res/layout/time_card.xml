@@ -57,7 +57,6 @@
         android:layout_centerHorizontal="true"
         android:paddingLeft="@dimen/time_card_action_padding_horizontal"
         android:paddingRight="@dimen/time_card_action_padding_horizontal"
-        android:paddingTop="@dimen/time_card_body_padding_vertical"
         android:contentDescription="@string/card_action_desc"
         android:src="@drawable/card_expand"/>
 
