@@ -2,7 +2,8 @@
     <dimen name="row_graph_detail_padding_horizontal">7dp</dimen>
     <dimen name="row_graph_detail_text">14sp</dimen>
 
-    <dimen name="fragment_graph_padding_horizontal">20dp</dimen>
+    <dimen name="fragment_graph_padding_horizontal">13dp</dimen>
+    <dimen name="fragment_graph_padding_vertical">7dp</dimen>
 
     <dimen name="time_card_radius">3dp</dimen>
     <dimen name="time_card_elevation">3dp</dimen>
@@ -29,7 +30,7 @@
     <dimen name="fab_margin_top">16dp</dimen>
 
     <dimen name="graph_height">180dp</dimen>
-    <dimen name="graph_text_size">6dp</dimen>
+    <dimen name="graph_text_size">14sp</dimen>
     <dimen name="graph_margin_bottom">-180dp</dimen>
     <dimen name="graph_stats_text_size">18sp</dimen>
     <dimen name="graph_stats_padding_horizontal">15dp</dimen>

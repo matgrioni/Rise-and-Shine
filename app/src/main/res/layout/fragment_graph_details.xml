@@ -12,9 +12,11 @@
         android:layout_width="match_parent"
         android:layout_height="@dimen/graph_height"
         android:background="@android:color/white"
+        android:paddingTop="@dimen/fragment_graph_padding_vertical"
         android:paddingRight="@dimen/fragment_graph_padding_horizontal"
         android:paddingLeft="@dimen/fragment_graph_padding_horizontal"
         android:transitionName="@string/time_card_expand"
+        graphview:yaxis="@string/screen_count_graph_y_axis"
         graphview:textSize="@dimen/graph_text_size"
         graphview:lineColor="@color/graph_line_color"
         graphview:shadeColor="@color/graph_shade_color"/>

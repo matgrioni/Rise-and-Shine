@@ -45,6 +45,8 @@
     <string name="graph_average_label">Average:</string>
     <string name="graph_stdev_label">St. Dev:</string>
 
+    <string name="screen_count_graph_y_axis">Views</string>
+
     <string-array name="intervals">
         <item>Hour</item>
         <item>Day</item>
