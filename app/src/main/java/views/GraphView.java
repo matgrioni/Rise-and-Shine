@@ -28,16 +28,19 @@ public class GraphView extends View {
     // The unscaled margin between the axis line and the edge of the view and the margin between the
     // top edge and the top of the graph.
     private static final float DEFAULT_UNSCALED_AXIS_MARGIN = 5;
+    private static final float DEFAULT_UNSCALED_AXIS_TEXT_SIZE = 12;
 
     // The axis margin is the distance between the axis labels and the actual
     // axis line.
     private int axisMargin;
-
     private String xAxisLabel;
+    private String yAxisLabel;
+
     private List<Integer> points;
     private List<Integer> selected;
 
-    private int textSize;
+    // This is the x position of the x-axis and the y position of the y-axis
+    // respectively.
     private int graphStartX;
     private int graphStartY;
 
@@ -47,6 +50,7 @@ public class GraphView extends View {
     private double verticalUnitToPx;
     private int horizontalUnitToPx;
 
+    private int textSize;
     private int lineColor;
     private int shadeColor;
 
@@ -98,11 +102,14 @@ public class GraphView extends View {
      */
     private void initAttrs(AttributeSet attrs) {
         TypedArray arr = getContext().getTheme().obtainStyledAttributes(attrs, R.styleable.GraphView, 0, 0);
-        final float scale = getResources().getDisplayMetrics().density;
 
         try {
-            float unscaledText = arr.getDimension(R.styleable.GraphView_textSize, 12);
-            textSize = (int) (unscaledText * scale + 0.5f);
+            float scale = getResources().getDisplayMetrics().density;
+            textSize = (int) arr.getDimension(R.styleable.GraphView_textSize,
+                    DEFAULT_UNSCALED_AXIS_TEXT_SIZE * scale);
+
+            setXAxis(getDefaultableStringResource(arr, R.styleable.GraphView_xaxis, ""));
+            setYAxis(getDefaultableStringResource(arr, R.styleable.GraphView_yaxis, ""));
 
             axisMargin = (int) arr.getDimension(R.styleable.GraphView_axisMargin,
                                                 DEFAULT_UNSCALED_AXIS_MARGIN * scale);
@@ -121,7 +128,7 @@ public class GraphView extends View {
         drawAxisLabels(canvas);
         drawAxes(canvas);
 
-        if(points.size() > 0) {
+        if (!empty()) {
             drawData(canvas);
             drawShading(canvas);
             drawSelected(canvas);
@@ -133,30 +140,30 @@ public class GraphView extends View {
      * @param canvas
      */
     private void drawAxisLabels(Canvas canvas) {
-        // Create a paint object that is antialiased and has the desired textsize.
+        // Create a paint object that is anti-aliased and has the desired text size.
         Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
         paint.setTextAlign(Paint.Align.LEFT);
         paint.setTextSize(textSize);
 
-        //
         Rect xAxisBounds = new Rect();
         paint.getTextBounds(xAxisLabel, 0, xAxisLabel.length(), xAxisBounds);
-        canvas.drawText(xAxisLabel, getWidth() / 2 - xAxisBounds.width() / 2,
-                getHeight() - xAxisBounds.bottom, paint);
 
         Rect yAxisBounds = new Rect();
-        paint.getTextBounds("Views", 0, 5, yAxisBounds);
+        paint.getTextBounds(yAxisLabel, 0, yAxisLabel.length(), yAxisBounds);
+
+        graphStartX = yAxisBounds.height() + axisMargin + getPaddingStart();
+        graphStartY = getHeight() - xAxisBounds.height() - axisMargin - getPaddingBottom();
+
+        graphWidth = getWidth() - graphStartX - getPaddingEnd();
+        graphHeight = graphStartY - getPaddingTop();
+
+        canvas.drawText(xAxisLabel, graphStartX + graphWidth / 2 - xAxisBounds.width() / 2,
+                graphStartY + axisMargin + xAxisBounds.height(), paint);
 
         canvas.save();
-        canvas.rotate(-90.f, yAxisBounds.height(), getHeight() / 2 + yAxisBounds.width() / 2);
-        canvas.drawText("Views", yAxisBounds.height(), getHeight() / 2 + yAxisBounds.width() / 2, paint);
+        canvas.rotate(-90.f, graphStartX - axisMargin, graphHeight / 2 + yAxisBounds.width() / 2);
+        canvas.drawText(yAxisLabel, graphStartX - axisMargin, graphHeight / 2 + yAxisBounds.width() / 2, paint);
         canvas.restore();
-
-        graphStartX = yAxisBounds.height() + axisMargin;
-        graphStartY = getHeight() - xAxisBounds.height() - axisMargin;
-
-        graphHeight = graphStartY;
-        graphWidth = getWidth() - graphStartX;
     }
 
     /**
@@ -168,8 +175,8 @@ public class GraphView extends View {
         paint.setStrokeWidth(2.5f);
         paint.setColor(Color.GRAY);
 
-        canvas.drawLine(graphStartX, graphStartY, getWidth(), graphStartY, paint);
-        canvas.drawLine(graphStartX, graphStartY, graphStartX, 0, paint);
+        canvas.drawLine(graphStartX, graphStartY, getWidth() - getPaddingEnd(), graphStartY, paint);
+        canvas.drawLine(graphStartX, graphStartY, graphStartX, getPaddingTop(), paint);
     }
 
     /**
@@ -247,12 +254,14 @@ public class GraphView extends View {
 
     /**
      *
-     * @param xaxis
+     * @param xAxis
      */
-    public void setAxis(String xaxis) {
-        if(xaxis == null)
-            xaxis = "";
-        this.xAxisLabel = xaxis;
+    public void setXAxis(String xAxis) {
+        this.xAxisLabel = xAxis;
+    }
+
+    public void setYAxis(String yAxis){
+        this.yAxisLabel = yAxis;
     }
 
     /**
@@ -261,7 +270,7 @@ public class GraphView extends View {
      */
     public void setData(List<Integer> points) {
         if(points == null)
-            points = new ArrayList<Integer>();
+            points = new ArrayList<>();
         this.points = points;
     }
 
@@ -302,5 +311,20 @@ public class GraphView extends View {
      */
     public boolean empty() {
         return this.points.size() == 0;
+    }
+
+    /**
+     *
+     * @param arr
+     * @param id
+     * @param defValue
+     * @return
+     */
+    private String getDefaultableStringResource(TypedArray arr, int id, String defValue){
+        String res = arr.getString(id);
+        if (res == null)
+            res = defValue;
+
+        return res;
     }
 }
