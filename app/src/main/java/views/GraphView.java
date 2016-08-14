@@ -128,7 +128,7 @@ public class GraphView extends View {
         drawAxisLabels(canvas);
         drawAxes(canvas);
 
-        if (!empty()) {
+        if (points.size() > 1) {
             drawData(canvas);
             drawShading(canvas);
             drawSelected(canvas);
@@ -206,7 +206,8 @@ public class GraphView extends View {
     }
 
     /**
-     *
+     * Draws the data of this GraphView onto the given Canvas. Assumes that the GraphView has more
+     * than one data point to Graph.
      * @param canvas
      */
     private void drawData(Canvas canvas) {
@@ -220,26 +221,21 @@ public class GraphView extends View {
         verticalUnitToPx = (max == 0 || graphHeight < max) ?
                 (double) max / graphHeight : (double) graphHeight / max;
 
-        if(points.size() > 1) {
-            horizontalUnitToPx = graphWidth / (points.size() - 1);
+        horizontalUnitToPx = graphWidth / (points.size() - 1);
 
-            int priorX = graphStartX;
-            int priorY = (int) (points.get(0) * verticalUnitToPx);
-            int currentX = graphStartX - 1;
+        int priorX = graphStartX;
+        int priorY = (int) (points.get(0) * verticalUnitToPx);
+        int currentX = graphStartX - 1;
 
-            for (int i = 1; i < points.size(); i++) {
-                currentX += horizontalUnitToPx;
-                if (i % points.size() == 0)
-                    currentX++;
+        for (int i = 1; i < points.size(); i++) {
+            currentX += horizontalUnitToPx;
+            if (i % points.size() == 0)
+                currentX++;
 
-                int currentY = (int) (points.get(i) * verticalUnitToPx);
-                canvas.drawLine(priorX, graphStartY - priorY, currentX, graphStartY - currentY, paint);
-                priorX = currentX;
-                priorY = currentY;
-            }
-        } else if(points.size() == 1) {
-            paint.setStyle(Paint.Style.FILL);
-            canvas.drawCircle(graphStartX, graphHeight * .4f, 6, paint);
+            int currentY = (int) (points.get(i) * verticalUnitToPx);
+            canvas.drawLine(priorX, graphStartY - priorY, currentX, graphStartY - currentY, paint);
+            priorX = currentX;
+            priorY = currentY;
         }
     }
 
@@ -264,6 +260,10 @@ public class GraphView extends View {
         this.xAxisLabel = xAxis;
     }
 
+    /**
+     *
+     * @param yAxis
+     */
     public void setYAxis(String yAxis){
         this.yAxisLabel = yAxis;
     }
@@ -276,6 +276,13 @@ public class GraphView extends View {
         if(points == null)
             points = new ArrayList<>();
         this.points = points;
+    }
+
+    /**
+     * @return A reference to the data points represented in this GraphView.
+     */
+    public List<Integer> getData(){
+        return this.points;
     }
 
     /**
@@ -306,15 +313,6 @@ public class GraphView extends View {
     public void clearSelected() {
         selected.clear();
         invalidate();
-    }
-
-    /**
-     * Check if this GraphView is representing any data.
-     *
-     * @return True if there there was no data set to display. False otherwise.
-     */
-    public boolean empty() {
-        return this.points.size() == 0;
     }
 
     /**
