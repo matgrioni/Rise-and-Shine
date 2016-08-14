@@ -136,7 +136,7 @@ public class TimeCardHolder extends RecyclerView.ViewHolder {
             action.setImageResource(R.drawable.card_expand);
         }
 
-        if (graph.empty()) {
+        if (cache.data.size() <= 1) {
             noData.setVisibility(View.VISIBLE);
             graph.setVisibility(View.GONE);
         } else {
