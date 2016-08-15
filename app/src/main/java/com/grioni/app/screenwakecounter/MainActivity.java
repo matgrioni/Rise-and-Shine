@@ -330,7 +330,7 @@ public class MainActivity extends AppCompatActivity implements
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         FragmentTransaction transaction = getFragmentManager().beginTransaction();
-        transaction.add(R.id.time_cards_container, f, tag);
+        transaction.replace(R.id.time_cards_container, f, tag);
         transaction.addToBackStack(null);
         transaction.commit();
 
