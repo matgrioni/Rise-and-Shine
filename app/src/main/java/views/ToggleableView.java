@@ -4,7 +4,9 @@ import android.content.Context;
 import android.content.res.TypedArray;
 import android.util.AttributeSet;
 import android.view.View;
+import android.view.ViewTreeObserver;
 import android.view.animation.Animation;
+import android.view.animation.Transformation;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 
@@ -15,6 +17,55 @@ import com.grioni.app.screenwakecounter.R;
  * @created 1/5/16
  */
 public class ToggleableView extends LinearLayout {
+
+    private class ToggleAnimation extends Animation {
+        private boolean animEnded;
+
+        private View animatedView;
+        private RelativeLayout.LayoutParams layoutParams;
+
+        // The margin that the view starts and the margin it should end
+        // at when the animation finishes.
+        private int marginStart;
+        private int marginEnd;
+
+        /**
+         * Create the animation to collapse and expand the TimeCard.
+         *
+         * @param view     - The view to animate.
+         * @param duration - The duration of the animation.
+         * @param marginStart
+         * @param marginEnd
+         */
+        public ToggleAnimation(View view, int duration, int marginStart, int marginEnd) {
+            animEnded = false;
+            setDuration(duration);
+
+            animatedView = view;
+            layoutParams = (RelativeLayout.LayoutParams) view.getLayoutParams();
+
+            this.marginStart = marginStart;
+            this.marginEnd = marginEnd;
+        }
+
+        @Override
+        protected void applyTransformation(float interpolatedTime, Transformation t) {
+            super.applyTransformation(interpolatedTime, t);
+
+            // If the animation is still ongoing then move the margins as necessary.
+            // Once the animation has ended ensure the interpolatedTime did the
+            // right thing and got the margin to the end.
+            if (interpolatedTime < 1.0f) {
+                layoutParams.bottomMargin = marginStart + (int) ((marginEnd - marginStart) * interpolatedTime);
+                animatedView.requestLayout();
+            } else if (!animEnded) {
+                layoutParams.bottomMargin = marginEnd;
+                animatedView.requestLayout();
+
+                animEnded = true;
+            }
+        }
+    }
 
     private Animation.AnimationListener animListener = new Animation.AnimationListener() {
         @Override
@@ -41,12 +92,14 @@ public class ToggleableView extends LinearLayout {
         void onToggle(View v, boolean isCollapsed);
     }
 
+    private boolean drawInit;
+
     private OnToggleListener toggleListener;
 
-    private ToggleViewAnimation toggle;
+    private ToggleAnimation toggle;
     private boolean isCollapsed;
 
-    private boolean marginInit;
+    private int originalHeight;
     private int originalMargin;
 
     public ToggleableView(Context context) {
@@ -70,9 +123,16 @@ public class ToggleableView extends LinearLayout {
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
         super.onLayout(changed, l, t, r, b);
 
-        if (isCollapsed) {
+        if (isCollapsed && !drawInit) {
+            originalMargin = getBottomMargin();
+            originalHeight = getHeight();
+
             ((RelativeLayout.LayoutParams) getLayoutParams()).bottomMargin = -1 * getHeight();
+            requestLayout();
+            invalidate();
         }
+
+        drawInit = true;
     }
 
     /**
@@ -80,7 +140,13 @@ public class ToggleableView extends LinearLayout {
      */
     private void init() {
         isCollapsed = false;
-        marginInit = false;
+        /*getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                ((RelativeLayout.LayoutParams) getLayoutParams()).bottomMargin = -1 * getHeight();
+                invalidate();
+            }
+        });*/
     }
 
     /**
@@ -95,19 +161,6 @@ public class ToggleableView extends LinearLayout {
         } finally {
             arr.recycle();
         }
-    }
-
-    /**
-     *
-     */
-    private void setupAnimation() {
-        if (!marginInit) {
-            originalMargin = ((RelativeLayout.LayoutParams) getLayoutParams()).bottomMargin;
-            marginInit = true;
-        }
-
-        toggle = new ToggleViewAnimation(this, 500, 0);
-        toggle.setAnimationListener(animListener);
     }
 
     /**
@@ -138,24 +191,30 @@ public class ToggleableView extends LinearLayout {
 
     /**
      *
-     * @return
      */
     public void show() {
-        if (isCollapsed) {
-            setupAnimation();
-            this.startAnimation(toggle);
+        if (drawInit && isCollapsed) {
+            toggle = new ToggleAnimation(this, 500, getBottomMargin(), originalMargin);
+            toggle.setAnimationListener(animListener);
 
-            isCollapsed = !isCollapsed;
+            this.startAnimation(toggle);
         }
+
+        isCollapsed = false;
     }
 
+    /**
+     *
+     */
     public void hide() {
-        if (!isCollapsed) {
-            setupAnimation();
-            this.startAnimation(toggle);
+        if (drawInit && !isCollapsed) {
+            toggle = new ToggleAnimation(this, 500, getBottomMargin(), -getHeight());
+            toggle.setAnimationListener(animListener);
 
-            isCollapsed = !isCollapsed;
+            this.startAnimation(toggle);
         }
+
+        isCollapsed = true;
     }
 
     /**
@@ -172,5 +231,9 @@ public class ToggleableView extends LinearLayout {
      */
     public boolean isCollapsed() {
         return isCollapsed;
+    }
+
+    private int getBottomMargin() {
+        return ((RelativeLayout.LayoutParams) getLayoutParams()).bottomMargin;
     }
 }
